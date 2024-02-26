@@ -60,9 +60,6 @@ func Get_query[T Station | Tag](url string) []T {
 		panic(err)
 	}
 	q := req.URL.Query()
-	// q.Set("action", "wbgetentities")
-	// q.Set("format", "json")
-	// q.Set("ids", "Q24871")
 	req.URL.RawQuery = q.Encode()
 	res, err := new(http.Client).Do(req)
 	if err != nil {
@@ -74,7 +71,6 @@ func Get_query[T Station | Tag](url string) []T {
 	if err != nil {
 		panic(err)
 	}
-	// json.Unmarshal(res.Body, &t)
 	return t
 }
 
