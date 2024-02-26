@@ -31,7 +31,6 @@ type Tag struct {
 	Stationcount int
 }
 
-
 func Get_list_of_available_servers() []Server {
 	ips, err := net.LookupIP(Radio_browser_info_url)
 	if err != nil {
@@ -53,19 +52,6 @@ func Get_list_of_available_servers() []Server {
 
 func Pick_random_server(servers []Server) Server {
 	return servers[rand.Intn(len(servers))]
-}
-
-type map_type map[string]interface{}
-
-func (t *map_type) f(s string) map_type {
-	return (*t)[s].(map[string]interface{})
-}
-
-func (t *map_type) str(s string) string {
-	return (*t)[s].(string)
-}
-func (t *map_type) f64(s string) float64 {
-	return (*t)[s].(float64)
 }
 
 func Get_query[T Station | Tag](url string) []T {
