@@ -13,7 +13,40 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 [radiobrowser]: https://www.radio-browser.info
 [tera]: https://github.com/shinokada/tera
 
+# Learning goals
+
+1. Communication between goroutines
+1. Sockets (communicate with mpv)
+1. Networking basics
+1. TUIs
+
+# Learning notes
+## The magic of json Decode
+ 
+
 # User flows
+
+
+
+# User interface
+1. Basic curses window with a scrolling part and some non-scrolling parts
+1. Different "pages" based on what mode we are in
+
+## Modes
+### Search
+1. Static info:
+   1. Currently selected server
+   1. Current search criteria
+   1. Current station
+   1. Current song
+   1. mpv status (?)
+1. Scrolling info
+   1. Recently played history (can add/remove from fav songs)
+   1. Stations (when searching)
+   1.
+
+### Play
+ 
 
 ## Autoplay
 ```
@@ -51,9 +84,3 @@ CSV file in case we want to import it to some other application.
 
 We restrict the number of moods to 5.
 
-# Learning goals
-
-1. Sockets (communicate with mpv)
-2. Networking basics
-3. Golang
-4. TUIs

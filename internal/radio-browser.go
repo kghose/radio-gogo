@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -14,22 +15,6 @@ const (
 	Radio_browser_info_url = "all.api.radio-browser.info"
 	Radio_browser_url      = "http://all.api.radio-browser.info/json/stations/search"
 )
-
-type Server struct {
-	Name string
-	IP   string
-	Err  error
-}
-
-type Station struct {
-	Name string
-	Url  string
-}
-
-type Tag struct {
-	Name         string
-	Stationcount int
-}
 
 func Get_list_of_available_servers() []Server {
 	ips, err := net.LookupIP(Radio_browser_info_url)
@@ -84,4 +69,29 @@ func Get_stations_by_tag(tag string, server Server) []Station {
 	url := server.Name + "/json/stations/bytag/" + tag
 	res := Get_query[Station](url)
 	return res
+}
+
+func Advanced_station_search(tag_list []string, server Server) ([]Station, error) {
+	url := server.Name + "/json/stations/search"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return []Station{}, err
+	}
+
+	q := req.URL.Query()
+	q.Add("tagList", strings.Join(tag_list, ","))
+	q.Add("hidebroken", strconv.FormatBool(true))
+
+	req.URL.RawQuery = q.Encode()
+	res, err := new(http.Client).Do(req)
+	if err != nil {
+		return []Station{}, err
+	}
+	defer res.Body.Close()
+	var t []Station
+	err = json.NewDecoder(res.Body).Decode(&t)
+	if err != nil {
+		return []Station{}, err
+	}
+	return t, nil
 }
