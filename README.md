@@ -84,3 +84,15 @@ CSV file in case we want to import it to some other application.
 
 We restrict the number of moods to 5.
 
+
+## mpv notes
+
+1. Use [JSON IPC](https://mpv.io/manual/master/#json-ipc) for control
+1. Start with `mpv --input-ipc-server=/tmp/mpvi.sock --profile=`
+1. Play URL: `{ "command": ["loadfile", "URL"], "request_id": 22 }`
+1. Pause: `{ "command": ["pause"], "request_id": 22 }`
+1. Properties: `{ "command": ["get_property", "PROP"] }`
+   path, duration,percent-pos, time-pos,time-remaining, metadata
+1. Quit: `{ "command": ["quit"], "request_id": -22 }`
+
+
