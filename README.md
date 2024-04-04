@@ -24,65 +24,31 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 ## The magic of json Decode
  
 
-# User flows
-
-
-
 # User interface
-1. Basic curses window with a scrolling part and some non-scrolling parts
-1. Different "pages" based on what mode we are in
 
-## Modes
-### Search
-1. Static info:
-   1. Currently selected server
-   1. Current search criteria
-   1. Current station
-   1. Current song
-   1. mpv status (?)
-1. Scrolling info
-   1. Recently played history (can add/remove from fav songs)
-   1. Stations (when searching)
-   1.
-
-### Play
- 
-
-## Autoplay
 ```
-1. Select mood
-2. Auto play
+[t]ag: ________
+[s]tation: _________
+|-------------------|
+| list item         |
+| list item         |
+| ...               |
+|-------------------|
+
+server: XYZ
 ```
 
-## Search
-```
-1. Select mood
-2. Search by tag and or country
-3. Select station from list
-```
+Typing "t" puts us in the tag entry box. We start typing and the list box lists 
+the tags that match the string we are typing. Hitting up/down arrow highlights 
+different tags in the list. Hitting enter selects/de-selects list items.
 
-Auto com
+Typing "s" puts us in station list mode. The list changes to show all stations 
+matching the selected tag(s). Hitting up/down highlights different stations.  
+Hitting enter selects the station and starts playing it. 
 
-## Station added to blacklist
-```
-If auto play play a new sttaion
-else go back to search page
-```
-
-## Favorite station
-Add station to current mood.
-
-## Favorite track
-Add track details to current mood.
-
-## How moods work
-We set a user defined "mood" (Defaults are Happy, Angry, Calm, Working, Writing) 
-for the session and attach our saved tracks and stations to this mood. When the 
-program is asked to play according to our mood it picks stations based on the 
-mood. It can't play individual tracks, but saves the favorite track details in a 
-CSV file in case we want to import it to some other application. 
-
-We restrict the number of moods to 5.
+On restarting we start with the last state (which is saved under 
+`$XDG_CONFIG_HOME/radio-gogo/config.json`) which means what we typed in the tag 
+field, selected tags and selected station are saved and restored.
 
 
 ## mpv notes
