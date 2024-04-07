@@ -2,6 +2,21 @@
  */
 package radio
 
+import "fmt"
+
+type EventKind string
+
+const (
+	ERROR           EventKind = "ERROR"
+	DATA_REFRESHED  EventKind = "DATA_REFRESHED"
+	STATE_REFRESHED EventKind = "STATE_REFRESHED"
+)
+
+type Event struct {
+	kind    EventKind
+	message string
+}
+
 type Radio struct {
 	Servers        []Server
 	Tags           []Tag
@@ -25,6 +40,13 @@ type Station struct {
 type Tag struct {
 	Name         string
 	Stationcount int
+}
+
+func (r *Radio) Init(radio_q chan Event) {
+	r.Servers = Get_list_of_available_servers()
+	radio_q <- Event{
+		STATE_REFRESHED,
+		fmt.Sprintf("%d Radio Browser servers found.", len(r.Servers))}
 }
 
 func (r *Radio) Refresh_servers() {

@@ -1,6 +1,8 @@
 package radio
 
 import (
+	"fmt"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -11,8 +13,11 @@ type State struct {
 }
 
 type RadioUI struct {
-	state    State
-	radio_on bool
+	device    Radio
+	state     State
+	radio_on  bool
+	error_msg string
+	msg       string
 }
 
 func (r *RadioUI) Play() {
@@ -24,8 +29,9 @@ func (r *RadioUI) Play() {
 	defer termbox.Close()
 
 	event_q := make(chan termbox.Event)
+	radio_q := make(chan Event)
 	go r.event_poll_loop(event_q)
-	r.main_loop(event_q)
+	r.main_loop(event_q, radio_q)
 }
 
 func (r *RadioUI) event_poll_loop(event_q chan termbox.Event) {
@@ -34,49 +40,52 @@ func (r *RadioUI) event_poll_loop(event_q chan termbox.Event) {
 	}
 }
 
-func (r *RadioUI) main_loop(event_q chan termbox.Event) {
+func (r *RadioUI) main_loop(event_q chan termbox.Event, radio_q chan Event) {
 	r.radio_on = true
+	go r.device.Init(radio_q)
 	for r.radio_on {
 		r.render()
 		select {
 		case ev := <-event_q:
 			r.process_termbox_event(ev)
+
+		case rev := <-radio_q:
+			r.process_event(rev)
 		}
 	}
 }
 
 func (r *RadioUI) render() {
 	termbox.Clear(termbox.ColorBlue, termbox.ColorBlue)
-	w, _ := termbox.Size()
+	w, h := termbox.Size()
 	banner(0, 0, w, "Radio Go Go", true, termbox.ColorBlack, termbox.ColorCyan)
+
+	if len(r.error_msg) > 0 {
+		banner(
+			h-1,
+			0,
+			w,
+			fmt.Sprintf("Error: %s", r.error_msg),
+			true,
+			termbox.ColorRed,
+			termbox.ColorYellow,
+		)
+	}
+	if len(r.msg) > 0 {
+		banner(
+			h-1,
+			0,
+			w,
+			r.msg,
+			true,
+			termbox.ColorBlack,
+			termbox.ColorCyan,
+		)
+	}
 	err := termbox.Flush()
 	if err != nil {
 		panic(err)
 	}
-}
-
-func banner(
-	row int,
-	col int,
-	width int,
-	msg string,
-	center bool,
-	fg termbox.Attribute,
-	bg termbox.Attribute,
-) {
-	if center {
-		col = max(0, width/2-len(msg)/2)
-	}
-	for n := 0; n < col; n++ {
-		termbox.SetCell(n, row, ' ', bg, bg)
-	}
-	for n, c := range msg {
-		termbox.SetCell(col+n, row, c, fg, bg)
-	}
-	for n := col + len(msg); n < width; n++ {
-		termbox.SetCell(n, row, ' ', bg, bg)
-	}
-
 }
 
 func (r *RadioUI) process_termbox_event(ev termbox.Event) {
@@ -86,6 +95,17 @@ func (r *RadioUI) process_termbox_event(ev termbox.Event) {
 	if quit_key(ev) {
 		r.radio_on = false
 		return
+	}
+
+}
+
+func (r *RadioUI) process_event(rev Event) {
+	switch rev.kind {
+	case ERROR:
+		r.error_msg = rev.message
+	case STATE_REFRESHED:
+		r.msg = rev.message
+
 	}
 
 }
