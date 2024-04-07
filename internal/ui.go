@@ -16,6 +16,8 @@ type RadioUI struct {
 	device    Radio
 	state     State
 	radio_on  bool
+	event_q   chan termbox.Event
+	radio_q   chan Event
 	error_msg string
 	msg       string
 }
@@ -28,28 +30,28 @@ func (r *RadioUI) Play() {
 	}
 	defer termbox.Close()
 
-	event_q := make(chan termbox.Event)
-	radio_q := make(chan Event)
-	go r.event_poll_loop(event_q)
-	r.main_loop(event_q, radio_q)
+	r.event_q = make(chan termbox.Event)
+	r.radio_q = make(chan Event)
+	go r.event_poll_loop()
+	r.main_loop()
 }
 
-func (r *RadioUI) event_poll_loop(event_q chan termbox.Event) {
+func (r *RadioUI) event_poll_loop() {
 	for {
-		event_q <- termbox.PollEvent()
+		r.event_q <- termbox.PollEvent()
 	}
 }
 
-func (r *RadioUI) main_loop(event_q chan termbox.Event, radio_q chan Event) {
+func (r *RadioUI) main_loop() {
 	r.radio_on = true
-	go r.device.Init(radio_q)
+	go r.device.Init(r.radio_q)
 	for r.radio_on {
 		r.render()
 		select {
-		case ev := <-event_q:
+		case ev := <-r.event_q:
 			r.process_termbox_event(ev)
 
-		case rev := <-radio_q:
+		case rev := <-r.radio_q:
 			r.process_event(rev)
 		}
 	}
@@ -97,6 +99,10 @@ func (r *RadioUI) process_termbox_event(ev termbox.Event) {
 		return
 	}
 
+	if ev.Ch == 's' {
+		go r.device.FindByTag([]string{"smooth jazz"}, r.radio_q)
+	}
+
 }
 
 func (r *RadioUI) process_event(rev Event) {
@@ -105,7 +111,8 @@ func (r *RadioUI) process_event(rev Event) {
 		r.error_msg = rev.message
 	case STATE_REFRESHED:
 		r.msg = rev.message
-
+	case DATA_REFRESHED:
+		r.msg = rev.message
 	}
 
 }

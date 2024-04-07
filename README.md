@@ -22,20 +22,45 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 
 # Learning notes
 ## The magic of json Decode
- 
 
-# User interface
+# Design decisions: Focus on simplicity
+
+I decided to make a simple app that looks nice (to me).
+
+I initiall thought about a tag search, and a station search and so on. But I 
+always liked the (original) Google search page the most. Just a simple text box 
+where you type in your terms and get results and behind that is a more 
+sophisticated search language if you want it.
+
+_I decided to have a single search bar you get to with "s". Typing a string 
+there does a tag search. If you add search directives, it does a more detailed 
+search.__
+
+I had initially planned a "responsive" program, where, for example, you could be 
+typing a search term and the search results would populate as you typed. This 
+would probably be cool, but it brought with it some technical and UX issues.  
+What happens if you type a search term, move to the search results and highlight 
+something and then more search results come in? Asynchronous events make things 
+very complicated.
+
+_I decided search is a blocking action. The UI is not actually blocked: You can 
+do a new search while the old search is running (which cancels the old search) 
+or quit the app. But it simplifies the UX as well as the code._
+
+# Design User interface
 
 ```
-[t]ag: ________
-[s]tation: _________
-|-------------------|
-| list item         |
-| list item         |
-| ...               |
-|-------------------|
-
-server: XYZ
+[s]earch: ________
+| help bar, expands     |
+| to show search syntax |
+|-----------------------|
+| station list          |
+| ...                   |
+| ...                   |
+|-----------------------|
+| info bar              |
+| errors                |
+|-----------------------|
 ```
 
 Typing "t" puts us in the tag entry box. We start typing and the list box lists 

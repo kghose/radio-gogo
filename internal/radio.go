@@ -49,6 +49,21 @@ func (r *Radio) Init(radio_q chan Event) {
 		fmt.Sprintf("%d Radio Browser servers found.", len(r.Servers))}
 }
 
+func (r *Radio) FindByTag(tag_list []string, radio_q chan Event) {
+
+	server := Pick_random_server(r.Servers)
+	radio_q <- Event{STATE_REFRESHED, fmt.Sprintf("Using %s", server.Name)}
+
+	var err error
+	r.Stations, err = Advanced_station_search(tag_list, server)
+	if err != nil {
+		radio_q <- Event{ERROR, fmt.Sprintf("Search error: %s", err.Error())}
+	} else {
+		radio_q <- Event{DATA_REFRESHED, fmt.Sprintf("Found %d stations.", len(r.Stations))}
+	}
+
+}
+
 func (r *Radio) Refresh_servers() {
 	r.Servers = Get_list_of_available_servers()
 }
