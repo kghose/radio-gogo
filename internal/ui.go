@@ -3,7 +3,9 @@ package radio
 import (
 	"fmt"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/nsf/termbox-go"
+	"github.com/rivo/tview"
 )
 
 type State struct {
@@ -13,113 +15,76 @@ type State struct {
 }
 
 type RadioUI struct {
-	device    Radio
-	state     State
-	radio_on  bool
-	event_q   chan termbox.Event
-	radio_q   chan Event
-	error_msg string
-	msg       string
+	device       Radio
+	app          *tview.Application
+	search_bar   *tview.InputField
+	station_list *tview.List
+	now_playing  *tview.TextView
+	status_bar   *tview.TextView
+	state        State
+	radio_on     bool
+	event_q      chan termbox.Event
+	radio_q      chan Event
+	error_msg    string
+	msg          string
 }
 
 func (r *RadioUI) Play() {
 
-	err := termbox.Init()
-	if err != nil {
-		panic(err)
+	r.app = tview.NewApplication()
+	r.setup_UI(r.app)
+	if err := r.app.Run(); err != nil {
+		r.app.Stop()
 	}
-	defer termbox.Close()
 
-	r.event_q = make(chan termbox.Event)
-	r.radio_q = make(chan Event)
-	go r.event_poll_loop()
-	r.main_loop()
 }
 
-func (r *RadioUI) event_poll_loop() {
-	for {
-		r.event_q <- termbox.PollEvent()
-	}
+func (r *RadioUI) setup_UI(app *tview.Application) {
+
+	r.search_bar = tview.NewInputField().
+		SetLabel("Search ").
+		SetFieldWidth(80).
+		SetFieldBackgroundColor(tcell.ColorSlateGray).
+		SetDoneFunc(r.Search)
+	r.station_list = tview.NewList().
+		ShowSecondaryText(false).
+		SetSelectedFunc(func(int, string, string, rune) {})
+	r.now_playing = tview.NewTextView()
+	r.status_bar = tview.NewTextView()
+
+	grid := tview.NewGrid().SetRows(1, -3, -1, 1).SetColumns(0).SetBorders(true)
+	grid.AddItem(r.search_bar, 0, 0, 1, 1, 0, 0, true)
+	grid.AddItem(r.station_list, 1, 0, 1, 1, 0, 0, false)
+	grid.AddItem(r.now_playing, 2, 0, 1, 1, 0, 0, false)
+	grid.AddItem(r.status_bar, 3, 0, 1, 1, 0, 0, false)
+	app.SetRoot(grid, true).SetFocus(grid)
 }
 
-func (r *RadioUI) main_loop() {
-	r.radio_on = true
-	go r.device.Init(r.radio_q)
-	for r.radio_on {
-		r.render()
-		select {
-		case ev := <-r.event_q:
-			r.process_termbox_event(ev)
-
-		case rev := <-r.radio_q:
-			r.process_event(rev)
-		}
-	}
-}
-
-func (r *RadioUI) render() {
-	termbox.Clear(termbox.ColorBlue, termbox.ColorBlue)
-	w, h := termbox.Size()
-	banner(0, 0, w, "Radio Go Go", true, termbox.ColorBlack, termbox.ColorCyan)
-
-	if len(r.error_msg) > 0 {
-		banner(
-			h-1,
-			0,
-			w,
-			fmt.Sprintf("Error: %s", r.error_msg),
-			true,
-			termbox.ColorRed,
-			termbox.ColorYellow,
-		)
-	}
-	if len(r.msg) > 0 {
-		banner(
-			h-1,
-			0,
-			w,
-			r.msg,
-			true,
-			termbox.ColorBlack,
-			termbox.ColorCyan,
-		)
-	}
-	err := termbox.Flush()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (r *RadioUI) process_termbox_event(ev termbox.Event) {
-	if ev.Type != termbox.EventKey {
-		return
-	}
-	if quit_key(ev) {
-		r.radio_on = false
+func (r *RadioUI) Search(key tcell.Key) {
+	if key != tcell.KeyEnter {
 		return
 	}
 
-	if ev.Ch == 's' {
-		go r.device.FindByTag([]string{"smooth jazz"}, r.radio_q)
+	if len(r.device.Servers) == 0 {
+		r.status_bar.SetText("Refreshing server list ...")
+		r.device.Refresh_servers()
 	}
 
-}
+	go func() {
+		r.device.FindByTag([]string{r.search_bar.GetText()})
+		r.app.QueueUpdateDraw(func() {
+			for _, station := range r.device.Stations {
+				r.station_list.AddItem(
+					fmt.Sprintf("%s (%s)",
+						station.Name, station.Url),
+					"", 0, nil)
+			}
+			r.status_bar.SetText(
+				fmt.Sprintf("Found %d stations.", len(r.device.Stations)))
+		})
+		r.app.SetFocus(r.station_list)
+	}()
 
-func (r *RadioUI) process_event(rev Event) {
-	switch rev.kind {
-	case ERROR:
-		r.error_msg = rev.message
-	case STATE_REFRESHED:
-		r.msg = rev.message
-	case DATA_REFRESHED:
-		r.msg = rev.message
-	}
+	r.status_bar.SetText("Searching ...")
 
-}
-
-func quit_key(ev termbox.Event) bool {
-	return ev.Ch == 'q' ||
-		ev.Key == termbox.KeyEsc ||
-		ev.Key == termbox.KeyCtrlC ||
-		ev.Key == termbox.KeyCtrlD
 }

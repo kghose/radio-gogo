@@ -27,14 +27,13 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 
 I decided to make a simple app that looks nice (to me).
 
-I initiall thought about a tag search, and a station search and so on. But I 
+I initially thought about a tag search, and a station search and so on. But I 
 always liked the (original) Google search page the most. Just a simple text box 
 where you type in your terms and get results and behind that is a more 
 sophisticated search language if you want it.
 
-_I decided to have a single search bar you get to with "s". Typing a string 
-there does a tag search. If you add search directives, it does a more detailed 
-search.__
+_I decided to have a single search bar where typing a string does a tag search.  
+If you add search directives, it does a more detailed search._
 
 I had initially planned a "responsive" program, where, for example, you could be 
 typing a search term and the search results would populate as you typed. This 
@@ -46,6 +45,14 @@ very complicated.
 _I decided search is a blocking action. The UI is not actually blocked: You can 
 do a new search while the old search is running (which cancels the old search) 
 or quit the app. But it simplifies the UX as well as the code._
+
+# Design decisions: Least dependencies
+
+I did a silly [console game](github.com/kghose/pinman) using nsf/termbox-go and 
+liked what I saw there. I especially liked that nsf/termbox-go has few 
+dependencies. 
+
+
 
 # Design User interface
 
