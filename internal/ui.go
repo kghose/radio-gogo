@@ -44,7 +44,8 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	r.search_bar = tview.NewInputField().
 		SetLabel("Search ").
 		SetFieldWidth(80).
-		SetFieldBackgroundColor(tcell.ColorSlateGray).
+		SetFieldBackgroundColor(tcell.ColorGreenYellow).
+		SetFieldTextColor(tcell.ColorBlack).
 		SetDoneFunc(r.Search)
 	r.station_list = tview.NewList().
 		ShowSecondaryText(false).
@@ -52,7 +53,11 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
 
-	grid := tview.NewGrid().SetRows(1, -3, -1, 1).SetColumns(0).SetBorders(true)
+	grid := tview.NewGrid().
+		SetRows(1, -3, -1, 1).
+		SetColumns(0).
+		SetBorders(true).
+		SetBordersColor(tcell.ColorGreenYellow)
 	grid.AddItem(r.search_bar, 0, 0, 1, 1, 0, 0, true)
 	grid.AddItem(r.station_list, 1, 0, 1, 1, 0, 0, false)
 	grid.AddItem(r.now_playing, 2, 0, 1, 1, 0, 0, false)
