@@ -57,7 +57,7 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	grid.AddItem(r.station_list, 1, 0, 1, 1, 0, 0, false)
 	grid.AddItem(r.now_playing, 2, 0, 1, 1, 0, 0, false)
 	grid.AddItem(r.status_bar, 3, 0, 1, 1, 0, 0, false)
-	app.SetRoot(grid, true).SetFocus(grid)
+	app.SetRoot(grid, true).SetFocus(grid).SetInputCapture(r.input_capture)
 }
 
 func (r *RadioUI) Search(key tcell.Key) {
@@ -87,4 +87,16 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 	r.status_bar.SetText("Searching ...")
 
+}
+
+func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
+	if event.Key() == tcell.KeyTab {
+		if r.app.GetFocus() == r.search_bar {
+			r.app.SetFocus(r.station_list)
+		} else {
+			r.app.SetFocus(r.search_bar)
+		}
+
+	}
+	return event
 }
