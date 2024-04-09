@@ -81,9 +81,10 @@ func (r *RadioUI) Search(key tcell.Key) {
 					"", 0, nil)
 			}
 			r.status_bar.SetText(
-				fmt.Sprintf("Found %d stations.", len(r.device.Stations)))
+				fmt.Sprintf("Found %d stations.",
+					len(r.device.Stations)))
+			r.app.SetFocus(r.station_list)
 		})
-		r.app.SetFocus(r.station_list)
 	}()
 
 	r.status_bar.SetText("Searching ...")
@@ -97,6 +98,7 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 		} else {
 			r.app.SetFocus(r.search_bar)
 		}
+		return nil
 
 	}
 	return event
