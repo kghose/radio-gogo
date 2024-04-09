@@ -73,6 +73,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 	go func() {
 		r.device.FindByTag([]string{r.search_bar.GetText()})
 		r.app.QueueUpdateDraw(func() {
+			r.station_list.Clear()
 			for _, station := range r.device.Stations {
 				r.station_list.AddItem(
 					fmt.Sprintf("%s (%s)",
