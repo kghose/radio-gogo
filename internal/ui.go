@@ -106,5 +106,8 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	}
+	if event.Rune() == 'q' && r.app.GetFocus() == r.station_list {
+		r.app.Stop()
+	}
 	return event
 }
