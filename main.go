@@ -7,6 +7,6 @@ import (
 func main() {
 
 	r := radio.RadioUI{}
-	r.Play()
+	r.Run()
 
 }

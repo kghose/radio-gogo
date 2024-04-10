@@ -23,6 +23,8 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 # Learning notes
 ## The magic of json Decode
 
+## Struct field tags
+
 # Design decisions: Focus on simplicity
 
 I decided to make a simple app that looks nice (to me).

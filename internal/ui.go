@@ -16,6 +16,7 @@ type State struct {
 
 type RadioUI struct {
 	device       Radio
+	player       Player
 	app          *tview.Application
 	search_bar   *tview.InputField
 	station_list *tview.List
@@ -29,13 +30,14 @@ type RadioUI struct {
 	msg          string
 }
 
-func (r *RadioUI) Play() {
+func (r *RadioUI) Run() {
 
 	r.app = tview.NewApplication()
 	r.setup_UI(r.app)
 	if err := r.app.Run(); err != nil {
 		r.app.Stop()
 	}
+	r.player.Quit()
 
 }
 
@@ -49,7 +51,9 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 		SetDoneFunc(r.Search)
 	r.station_list = tview.NewList().
 		ShowSecondaryText(false).
-		SetSelectedFunc(func(int, string, string, rune) {})
+		SetSelectedFunc(func(_ int, _ string, url string, _ rune) {
+			r.play(url)
+		})
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
 
@@ -70,6 +74,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 		return
 	}
 
+	// TODO: move this to start up
 	if len(r.device.Servers) == 0 {
 		r.status_bar.SetText("Refreshing server list ...")
 		r.device.Refresh_servers()
@@ -83,7 +88,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 				r.station_list.AddItem(
 					fmt.Sprintf("%s (%s)",
 						station.Name, station.Url),
-					"", 0, nil)
+					station.Url, 0, nil)
 			}
 			r.status_bar.SetText(
 				fmt.Sprintf("Found %d stations.",
@@ -94,6 +99,12 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 	r.status_bar.SetText("Searching ...")
 
+}
+
+func (r *RadioUI) play(url string) {
+	resp := r.player.Play(url)
+	r.status_bar.SetText(resp.Error)
+	r.now_playing.SetText(url)
 }
 
 func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
