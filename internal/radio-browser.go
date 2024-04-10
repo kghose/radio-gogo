@@ -39,32 +39,6 @@ func Pick_random_server(servers []Server) Server {
 	return servers[rand.Intn(len(servers))]
 }
 
-func Get_query[T Station](url string) []T {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		panic(err)
-	}
-	q := req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	res, err := new(http.Client).Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-	var t []T
-	err = json.NewDecoder(res.Body).Decode(&t)
-	if err != nil {
-		panic(err)
-	}
-	return t
-}
-
-func Get_stations_by_tag(tag string, server Server) []Station {
-	url := server.Name + "/json/stations/bytag/" + tag
-	res := Get_query[Station](url)
-	return res
-}
-
 func Advanced_station_search(tag_list []string, server Server) ([]Station, error) {
 	url := server.Name + "/json/stations/search"
 	req, err := http.NewRequest("GET", url, nil)
