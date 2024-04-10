@@ -2,6 +2,7 @@ package radio
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net"
 	"net/http"
@@ -11,9 +12,8 @@ import (
 
 const (
 	RadioGoGoAppString     = "radiogogo"
-	RadioGoGoVersion       = "0.0"
+	RadioGoGoVersion       = "0.1"
 	Radio_browser_info_url = "all.api.radio-browser.info"
-	Radio_browser_url      = "http://all.api.radio-browser.info/json/stations/search"
 )
 
 func Get_list_of_available_servers() ([]Server, error) {
@@ -46,6 +46,9 @@ func Advanced_station_search(tag_list []string, server Server) ([]Station, error
 		return []Station{}, err
 	}
 
+	req.Header.Add(
+		"User-Agent",
+		fmt.Sprintf("%s/%s", RadioGoGoAppString, RadioGoGoVersion))
 	q := req.URL.Query()
 	q.Add("tagList", strings.Join(tag_list, ","))
 	q.Add("hidebroken", strconv.FormatBool(true))
