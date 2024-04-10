@@ -32,8 +32,10 @@ type RadioUI struct {
 
 func (r *RadioUI) Run() {
 
+	r.player.Start()
 	r.app = tview.NewApplication()
 	r.setup_UI(r.app)
+	go r.RefreshServers()
 	if err := r.app.Run(); err != nil {
 		r.app.Stop()
 	}
@@ -69,17 +71,20 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	app.SetRoot(grid, true).SetFocus(grid).SetInputCapture(r.input_capture)
 }
 
+func (r *RadioUI) RefreshServers() {
+	r.app.QueueUpdateDraw(func() { r.status_bar.SetText("Refreshing server list ...") })
+	r.device.Refresh_servers()
+	r.app.QueueUpdateDraw(
+		func() { r.status_bar.SetText(fmt.Sprintf("Found %d Radio Browser servers.", len(r.device.Servers))) },
+	)
+}
+
 func (r *RadioUI) Search(key tcell.Key) {
 	if key != tcell.KeyEnter {
 		return
 	}
 
-	// TODO: move this to start up
-	if len(r.device.Servers) == 0 {
-		r.status_bar.SetText("Refreshing server list ...")
-		r.device.Refresh_servers()
-	}
-
+	// TODO: Wait until servers have been found ...
 	go func() {
 		r.device.FindByTag([]string{r.search_bar.GetText()})
 		r.app.QueueUpdateDraw(func() {
