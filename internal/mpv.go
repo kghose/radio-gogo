@@ -3,7 +3,9 @@ package radio
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"net"
+	"os/exec"
 )
 
 const MPV_SOCKET = "/tmp/mpv.sock"
@@ -21,6 +23,16 @@ type MpvResponse struct {
 
 type Player struct {
 	request_id int
+}
+
+func (p *Player) Start() {
+	cmd := exec.Command(
+		"mpv",
+		fmt.Sprintf("--input-ipc-server=%s", MPV_SOCKET),
+		"--idle=yes",
+		"--profile=low-latency",
+	)
+	cmd.Start()
 }
 
 func (p *Player) Play(url string) MpvResponse {
