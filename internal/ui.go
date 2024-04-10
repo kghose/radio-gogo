@@ -8,12 +8,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-type State struct {
-	tag_string    string
-	selected_tags []string
-	station_index int
-}
-
 type RadioUI struct {
 	device       Radio
 	player       Player
@@ -22,10 +16,6 @@ type RadioUI struct {
 	station_list *tview.List
 	now_playing  *tview.TextView
 	status_bar   *tview.TextView
-	state        State
-	radio_on     bool
-	error_msg    string
-	msg          string
 }
 
 func (r *RadioUI) Run() {
