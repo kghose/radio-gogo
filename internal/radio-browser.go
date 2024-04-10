@@ -16,12 +16,12 @@ const (
 	Radio_browser_url      = "http://all.api.radio-browser.info/json/stations/search"
 )
 
-func Get_list_of_available_servers() []Server {
+func Get_list_of_available_servers() ([]Server, error) {
+	servers := []Server{}
 	ips, err := net.LookupIP(Radio_browser_info_url)
 	if err != nil {
-		panic(err)
+		return servers, err
 	}
-	servers := []Server{}
 	for _, ip := range ips {
 		names, err := net.LookupAddr(ip.String())
 		for _, name := range names {
@@ -32,14 +32,14 @@ func Get_list_of_available_servers() []Server {
 			})
 		}
 	}
-	return servers
+	return servers, nil
 }
 
 func Pick_random_server(servers []Server) Server {
 	return servers[rand.Intn(len(servers))]
 }
 
-func Get_query[T Station | Tag](url string) []T {
+func Get_query[T Station](url string) []T {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		panic(err)
@@ -57,12 +57,6 @@ func Get_query[T Station | Tag](url string) []T {
 		panic(err)
 	}
 	return t
-}
-
-func Get_tags(server Server) []Tag {
-	url := server.Name + "/json/tags"
-	res := Get_query[Tag](url)
-	return res
 }
 
 func Get_stations_by_tag(tag string, server Server) []Station {

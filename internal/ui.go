@@ -2,9 +2,9 @@ package radio
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/nsf/termbox-go"
 	"github.com/rivo/tview"
 )
 
@@ -24,8 +24,6 @@ type RadioUI struct {
 	status_bar   *tview.TextView
 	state        State
 	radio_on     bool
-	event_q      chan termbox.Event
-	radio_q      chan Event
 	error_msg    string
 	msg          string
 }
@@ -72,8 +70,20 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 }
 
 func (r *RadioUI) RefreshServers() {
-	r.app.QueueUpdateDraw(func() { r.status_bar.SetText("Refreshing server list ...") })
-	r.device.Refresh_servers()
+	r.app.QueueUpdateDraw(func() {
+		r.status_bar.SetText("Refreshing server list ...")
+	})
+	err := r.device.Refresh_servers()
+	for err != nil {
+		r.app.QueueUpdateDraw(
+			func() {
+				r.status_bar.SetText(
+					fmt.Sprintf("Error refreshing server list %s",
+						err.Error()))
+			})
+		time.Sleep(1 * time.Second)
+		err = r.device.Refresh_servers()
+	}
 	r.app.QueueUpdateDraw(
 		func() { r.status_bar.SetText(fmt.Sprintf("Found %d Radio Browser servers.", len(r.device.Servers))) },
 	)
@@ -84,10 +94,22 @@ func (r *RadioUI) Search(key tcell.Key) {
 		return
 	}
 
-	// TODO: Wait until servers have been found ...
+	// Wait until servers have been found ...
+	if len(r.device.Servers) == 0 {
+		return
+	}
+
 	go func() {
+		var err error
 		r.device.FindByTag([]string{r.search_bar.GetText()})
 		r.app.QueueUpdateDraw(func() {
+
+			if err != nil {
+				r.status_bar.SetText(
+					fmt.Sprintf("Search error: %s", err.Error()))
+				return
+			}
+
 			r.station_list.Clear()
 			for _, station := range r.device.Stations {
 				r.station_list.AddItem(
