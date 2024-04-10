@@ -4,7 +4,6 @@ go 1.21.6
 
 require (
 	github.com/gdamore/tcell/v2 v2.7.1
-	github.com/nsf/termbox-go v1.1.1
 	github.com/rivo/tview v0.0.0-20240406141410-79d4cc321256
 )
 
