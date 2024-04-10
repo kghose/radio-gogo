@@ -88,7 +88,7 @@ field, selected tags and selected station are saved and restored.
 ## mpv notes
 
 1. Use [JSON IPC](https://mpv.io/manual/master/#json-ipc) for control
-1. Start with `mpv --input-ipc-server=/tmp/mpvi.sock --profile=`
+1. Start with `mpv --input-ipc-server=/tmp/mpvi.sock --idle=yes`
 1. Play URL: `{ "command": ["loadfile", "URL"], "request_id": 22 }`
 1. Pause: `{ "command": ["pause"], "request_id": 22 }`
 1. Properties: `{ "command": ["get_property", "PROP"] }`

@@ -22,6 +22,8 @@ type MpvResponse struct {
 }
 
 type Player struct {
+	url        string
+	playing    bool
 	request_id int
 }
 
@@ -36,12 +38,24 @@ func (p *Player) Start() {
 }
 
 func (p *Player) Play(url string) MpvResponse {
+	p.url = url
+	p.playing = true
 	return p.command([]string{"loadfile", url})
+}
+
+func (p *Player) Pause() MpvResponse {
+	if p.playing {
+		p.playing = false
+		return p.command([]string{"stop"})
+	} else {
+		return p.Play(p.url)
+	}
 }
 
 func (p *Player) Quit() MpvResponse {
 	return p.command([]string{"quit"})
 }
+
 func (p *Player) command(cmd []string) (resp MpvResponse) {
 	resp = MpvResponse{}
 	conn, err := net.Dial("unix", MPV_SOCKET)

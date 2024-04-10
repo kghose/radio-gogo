@@ -124,8 +124,14 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	}
-	if event.Rune() == 'q' && r.app.GetFocus() == r.station_list {
-		r.app.Stop()
+
+	if r.app.GetFocus() != r.search_bar {
+		switch event.Rune() {
+		case 'q':
+			r.app.Stop()
+		case 'p':
+			r.player.Pause()
+		}
 	}
 	return event
 }
