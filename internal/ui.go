@@ -98,7 +98,9 @@ func (r *RadioUI) Search(key tcell.Key) {
 			r.status_bar.SetText(
 				fmt.Sprintf("Found %d stations.",
 					len(r.device.Stations)))
-			r.app.SetFocus(r.station_list)
+			if len(r.device.Stations) > 0 {
+				r.app.SetFocus(r.station_list)
+			}
 		})
 	}()
 
