@@ -52,47 +52,10 @@ or quit the app. But it simplifies the UX as well as the code._
 
 I did a silly [console game](github.com/kghose/pinman) using nsf/termbox-go and 
 liked what I saw there. I especially liked that nsf/termbox-go has few 
-dependencies. 
+dependencies but it would be a lot of work to expand that to a TUI. rivo/tview 
+hit the right spot: it is well featured and keeps its deps to within a certain 
+circle of what I'd consider well used and stable code. 
 
-
-
-# Design User interface
-
-```
-[s]earch: ________
-| help bar, expands     |
-| to show search syntax |
-|-----------------------|
-| station list          |
-| ...                   |
-| ...                   |
-|-----------------------|
-| info bar              |
-| errors                |
-|-----------------------|
-```
-
-Typing "t" puts us in the tag entry box. We start typing and the list box lists 
-the tags that match the string we are typing. Hitting up/down arrow highlights 
-different tags in the list. Hitting enter selects/de-selects list items.
-
-Typing "s" puts us in station list mode. The list changes to show all stations 
-matching the selected tag(s). Hitting up/down highlights different stations.  
-Hitting enter selects the station and starts playing it. 
-
-On restarting we start with the last state (which is saved under 
-`$XDG_CONFIG_HOME/radio-gogo/config.json`) which means what we typed in the tag 
-field, selected tags and selected station are saved and restored.
-
-
-## mpv notes
-
-1. Use [JSON IPC](https://mpv.io/manual/master/#json-ipc) for control
-1. Start with `mpv --input-ipc-server=/tmp/mpvi.sock --idle=yes`
-1. Play URL: `{ "command": ["loadfile", "URL"], "request_id": 22 }`
-1. Pause: `{ "command": ["pause"], "request_id": 22 }`
-1. Properties: `{ "command": ["get_property", "PROP"] }`
-   path, duration,percent-pos, time-pos,time-remaining, metadata
-1. Quit: `{ "command": ["quit"], "request_id": -22 }`
-
+nsf/termbox-go is small enough to vendor in, rivo/tview is larger, but feasible 
+to vendor in.
 
