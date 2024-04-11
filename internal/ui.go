@@ -8,6 +8,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+const STATION_METADATA_REFRESH_INTERVAL = time.Second
+
 type RadioUI struct {
 	device       Radio
 	player       Player
@@ -24,6 +26,7 @@ func (r *RadioUI) Run() {
 	r.app = tview.NewApplication()
 	r.setup_UI(r.app)
 	go r.RefreshServers()
+	go r.periodically_update_stream_metadata()
 	if err := r.app.Run(); err != nil {
 		r.app.Stop()
 	}
@@ -48,7 +51,7 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	r.status_bar = tview.NewTextView()
 
 	grid := tview.NewGrid().
-		SetRows(1, -3, -1, 1).
+		SetRows(1, -1, 4, 1).
 		SetColumns(0).
 		SetBorders(true).
 		SetBordersColor(tcell.ColorGreenYellow)
@@ -124,6 +127,29 @@ func (r *RadioUI) play(url string) {
 	resp := r.player.Play(url)
 	r.status_bar.SetText(resp.Error)
 	r.now_playing.SetText(url)
+}
+
+func (r *RadioUI) periodically_update_stream_metadata() {
+	for {
+		time.Sleep(STATION_METADATA_REFRESH_INTERVAL)
+		if !r.player.playing {
+			continue
+		}
+		r.app.QueueUpdateDraw(r.update_stream_metadata)
+	}
+}
+
+func (r *RadioUI) update_stream_metadata() {
+	meta := r.player.Meta()
+	r.now_playing.SetText(
+		fmt.Sprintf(
+			"Station: %s\nSummary: %s\nGenre: %s\nTrack: %s",
+			meta.Name,
+			meta.Description,
+			meta.Genre,
+			meta.Title,
+		),
+	)
 }
 
 func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {

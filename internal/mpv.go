@@ -17,8 +17,15 @@ type MpvRequest struct {
 
 type MpvResponse struct {
 	Request_id int
-	Data       any
+	Data       json.RawMessage
 	Error      string
+}
+
+type MpvMetadata struct {
+	Name        string `json:"icy-name"`
+	Description string `json:"icy-description"`
+	Genre       string `json:"icy-genre"`
+	Title       string `json:"icy-title"`
 }
 
 type Player struct {
@@ -50,6 +57,13 @@ func (p *Player) Pause() MpvResponse {
 	} else {
 		return p.Play(p.url)
 	}
+}
+
+func (p *Player) Meta() MpvMetadata {
+	response := p.command([]string{"get_property", "metadata"})
+	meta := MpvMetadata{}
+	json.Unmarshal(response.Data, &meta)
+	return meta
 }
 
 func (p *Player) Quit() MpvResponse {
