@@ -1,5 +1,7 @@
 # Radio Go Go
 
+![](screen-shot.png)
+
     All we heard is radio ga ga
     Radio goo goo
 
@@ -12,6 +14,7 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 [mpv]: https://mpv.io
 [radiobrowser]: https://www.radio-browser.info
 [tera]: https://github.com/shinokada/tera
+
 
 # Learning goals
 
