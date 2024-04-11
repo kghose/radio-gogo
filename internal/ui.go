@@ -103,24 +103,30 @@ func (r *RadioUI) Search(key tcell.Key) {
 				return
 			}
 
-			r.station_list.Clear()
-			for _, station := range r.device.Stations {
-				r.station_list.AddItem(
-					fmt.Sprintf("%s (%s)",
-						station.Name, station.Url),
-					station.Url, 0, nil)
-			}
 			r.status_bar.SetText(
 				fmt.Sprintf("Found %d stations.",
 					len(r.device.Stations)))
-			if len(r.device.Stations) > 0 {
-				r.app.SetFocus(r.station_list)
-			}
+
+			r.update_station_list(r.device.Stations)
 		})
 	}()
 
 	r.status_bar.SetText("Searching ...")
 
+}
+
+func (r *RadioUI) update_station_list(stations []Station) {
+	r.station_list.Clear()
+	for _, station := range stations {
+		r.station_list.AddItem(
+			fmt.Sprintf("%s (%s)",
+				station.Name, station.Url),
+			station.Url, 0, nil)
+	}
+	r.station_list.SetCurrentItem(0)
+	if r.station_list.GetItemCount() > 0 {
+		r.app.SetFocus(r.station_list)
+	}
 }
 
 func (r *RadioUI) play(url string) {
