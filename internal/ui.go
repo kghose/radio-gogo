@@ -94,7 +94,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 	go func() {
 		var err error
-		r.device.FindByTag([]string{r.search_bar.GetText()})
+		err = r.device.FindByTag([]string{r.search_bar.GetText()})
 		r.app.QueueUpdateDraw(func() {
 
 			if err != nil {
