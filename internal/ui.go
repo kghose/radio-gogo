@@ -107,7 +107,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 				fmt.Sprintf("Found %d stations.",
 					len(r.device.Stations)))
 
-			r.update_station_list(r.device.Stations)
+			r.update_station_list(&r.device.Stations)
 		})
 	}()
 
@@ -115,9 +115,9 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 }
 
-func (r *RadioUI) update_station_list(stations []Station) {
+func (r *RadioUI) update_station_list(stations *StationSet) {
 	r.station_list.Clear()
-	for _, station := range stations {
+	for _, station := range *stations {
 		r.station_list.AddItem(
 			fmt.Sprintf("%s (%s)",
 				station.Name, station.Url),

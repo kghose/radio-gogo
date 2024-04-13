@@ -9,17 +9,20 @@ import (
 	"path"
 )
 
+// Key by station URL
+type StationSet map[string]Station
+
 type Radio struct {
 	Servers        []Server
-	Stations       []Station
+	Stations       StationSet
 	CurrentStation Station
 	CurrentServer  Server
 	User_data      UserData
 }
 
 type UserData struct {
-	Station_history   []Station
-	Station_favorites []Station
+	Station_history   StationSet
+	Station_favorites StationSet
 }
 
 type Server struct {
@@ -51,8 +54,7 @@ func (r *Radio) Refresh_servers() error {
 
 func (r *Radio) Now_playing(station Station) {
 	r.CurrentStation = station
-	r.User_data.Station_history = append(
-		r.User_data.Station_history, station)
+	r.User_data.Station_history[station.Url] = station
 }
 
 const (
