@@ -43,10 +43,11 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 		SetFieldTextColor(tcell.ColorBlack).
 		SetDoneFunc(r.Search)
 	r.station_list = tview.NewList().
-		ShowSecondaryText(false).
+		ShowSecondaryText(true).
 		SetSelectedFunc(func(_ int, _ string, url string, _ rune) {
 			r.play(url)
 		})
+	r.station_list.SetTitle("Search")
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
 
@@ -118,10 +119,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 func (r *RadioUI) update_station_list(stations *StationSet) {
 	r.station_list.Clear()
 	for _, station := range *stations {
-		r.station_list.AddItem(
-			fmt.Sprintf("%s (%s)",
-				station.Name, station.Url),
-			station.Url, 0, nil)
+		r.station_list.AddItem(station.Name, station.Url, 0, nil)
 	}
 	r.station_list.SetCurrentItem(0)
 	if r.station_list.GetItemCount() > 0 {
