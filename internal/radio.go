@@ -2,14 +2,24 @@
  */
 package radio
 
-type EventKind string
+import (
+	"encoding/json"
+	"io/fs"
+	"os"
+	"path"
+)
 
 type Radio struct {
 	Servers        []Server
 	Stations       []Station
 	CurrentStation Station
 	CurrentServer  Server
-	Error          string
+	User_data      UserData
+}
+
+type UserData struct {
+	Station_history   []Station
+	Station_favorites []Station
 }
 
 type Server struct {
@@ -37,4 +47,61 @@ func (r *Radio) Refresh_servers() error {
 	var err error
 	r.Servers, err = Get_list_of_available_servers()
 	return err
+}
+
+func (r *Radio) Now_playing(station Station) {
+	r.CurrentStation = station
+	r.User_data.Station_history = append(
+		r.User_data.Station_history, station)
+}
+
+const (
+	USER_DATA_DIR  = "radio-gogo"
+	USER_DATA_FILE = "stations.json"
+)
+
+func user_data_file() (string, error) {
+	home := os.Getenv("HOME")
+	data_home := os.Getenv("XDG_DATA_HOME")
+	if data_home == "" {
+		data_home = path.Join(home, ".local", "share")
+	}
+	err := os.MkdirAll(data_home, fs.FileMode(0777))
+	return path.Join(data_home, USER_DATA_FILE), err
+}
+
+func (r *Radio) Save_user_data(fname string) error {
+	fname, err := user_data_file()
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	data_str, err := json.MarshalIndent(r.User_data, "", " ")
+	_, err = f.Write(data_str)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Radio) Load_user_data(fname string) error {
+	fname, err := user_data_file()
+	if err != nil {
+		return err
+	}
+	data_bytes, err := os.ReadFile(fname)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(data_bytes, &r.User_data)
+	if err != nil {
+		return err
+	}
+	return nil
 }
