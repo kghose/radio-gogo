@@ -66,8 +66,8 @@ func Advanced_station_search(tag_list []string, server Server) (StationSet, erro
 	}
 
 	station_set := make(StationSet, len(station_list))
-	for _, station := range station_list {
-		station_set[station.Url] = station
+	for i := range station_list {
+		station_set[station_list[i].Url] = &station_list[i]
 	}
 
 	return station_set, nil

@@ -10,7 +10,7 @@ import (
 )
 
 // Key by station URL
-type StationSet map[string]Station
+type StationSet map[string]*Station
 
 type Radio struct {
 	Servers        []Server
@@ -52,8 +52,8 @@ func (r *Radio) Refresh_servers() error {
 	return err
 }
 
-func (r *Radio) Now_playing(station Station) {
-	r.CurrentStation = station
+func (r *Radio) Now_playing(station *Station) {
+	r.CurrentStation = *station
 	r.User_data.Station_history[station.Url] = station
 }
 
