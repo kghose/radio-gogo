@@ -23,6 +23,8 @@ type RadioUI struct {
 
 func (r *RadioUI) Run() {
 
+	r.device = NewRadio()
+
 	r.player.Start()
 	r.app = tview.NewApplication()
 	r.setup_UI(r.app)
@@ -110,7 +112,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 			r.status_bar.SetText(
 				fmt.Sprintf("Found %d stations.",
-					len(r.device.Stations)))
+					r.device.Stations.Len()))
 
 			r.show_search()
 		})
@@ -122,8 +124,8 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 func (r *RadioUI) update_station_list(stations *StationSet) {
 	r.station_list.Clear()
-	for url := range *stations {
-		r.station_list.AddItem((*stations)[url].Name, url, 0, nil)
+	for i := range stations.Stations {
+		r.station_list.AddItem(stations.Stations[i].Name, stations.Stations[i].Url, 0, nil)
 	}
 	r.station_list.SetCurrentItem(0)
 	if r.station_list.GetItemCount() > 0 {
@@ -134,17 +136,17 @@ func (r *RadioUI) update_station_list(stations *StationSet) {
 func (r *RadioUI) show_search() {
 	r.tab_title.SetText("Search")
 	r.update_station_list(
-		&r.device.Stations)
+		r.device.Stations)
 }
 
 func (r *RadioUI) show_history() {
 	r.tab_title.SetText("History")
 	r.update_station_list(
-		&r.device.User_data.Station_history)
+		r.device.User_data.Station_history)
 }
 
 func (r *RadioUI) play(url string) {
-	station := r.device.Stations[url]
+	station := r.device.Stations.By_url(url)
 	resp := r.player.Play(station.Url)
 	r.status_bar.SetText(resp.Error)
 	r.device.Now_playing(station)

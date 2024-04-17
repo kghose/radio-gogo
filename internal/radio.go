@@ -7,22 +7,68 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"sort"
 )
 
-// Key by station URL
-type StationSet map[string]*Station
+type StationSet struct {
+	Stations []*Station
+	urls     map[string]*Station
+}
+
+func (s *StationSet) add(station *Station) {
+	_, present := s.urls[station.Url]
+	if present {
+		return
+	} else {
+		s.Stations = append(s.Stations, station)
+		s.urls[station.Url] = station
+	}
+}
+
+func (s *StationSet) By_url(url string) *Station {
+	return s.urls[url]
+}
+
+// https://pkg.go.dev/sort
+func (s *StationSet) Len() int { return len(s.Stations) }
+func (s *StationSet) Swap(i, j int) {
+	s.Stations[i], s.Stations[j] = s.Stations[j], s.Stations[i]
+}
+func (s *StationSet) Less(i, j int) bool {
+	return s.Stations[i].Name < s.Stations[j].Name
+}
+
+func NewStationSet() *StationSet {
+	s := StationSet{}
+	s.urls = make(map[string]*Station)
+	return &s
+}
 
 type Radio struct {
 	Servers        []Server
-	Stations       StationSet
+	Stations       *StationSet
 	CurrentStation Station
 	CurrentServer  Server
 	User_data      UserData
 }
 
+func NewRadio() Radio {
+	r := Radio{}
+	r.Stations = NewStationSet()
+	r.User_data = NewUserData()
+	return r
+}
+
 type UserData struct {
-	Station_history   StationSet
-	Station_favorites StationSet
+	Station_history   *StationSet
+	Station_favorites *StationSet
+}
+
+func NewUserData() UserData {
+	ud := UserData{}
+	ud.Station_history = NewStationSet()
+	ud.Station_favorites = NewStationSet()
+	return ud
 }
 
 type Server struct {
@@ -42,6 +88,7 @@ func (r *Radio) FindByTag(tag_list []string) error {
 
 	var err error
 	r.Stations, err = Advanced_station_search(tag_list, r.CurrentServer)
+	sort.Sort(r.Stations)
 	return err
 
 }
@@ -53,11 +100,8 @@ func (r *Radio) Refresh_servers() error {
 }
 
 func (r *Radio) Now_playing(station *Station) {
-	if r.User_data.Station_history == nil {
-		r.User_data.Station_history = make(StationSet)
-	}
 	r.CurrentStation = *station
-	r.User_data.Station_history[station.Url] = station
+	r.User_data.Station_history.add(station)
 }
 
 const (

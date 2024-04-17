@@ -39,11 +39,13 @@ func Pick_random_server(servers []Server) Server {
 	return servers[rand.Intn(len(servers))]
 }
 
-func Advanced_station_search(tag_list []string, server Server) (StationSet, error) {
+func Advanced_station_search(tag_list []string, server Server) (*StationSet, error) {
+	station_set := NewStationSet()
+
 	url := server.Name + "/json/stations/search"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return StationSet{}, err
+		return station_set, err
 	}
 
 	req.Header.Add(
@@ -56,18 +58,17 @@ func Advanced_station_search(tag_list []string, server Server) (StationSet, erro
 	req.URL.RawQuery = q.Encode()
 	res, err := new(http.Client).Do(req)
 	if err != nil {
-		return StationSet{}, err
+		return station_set, err
 	}
 	defer res.Body.Close()
 	var station_list []Station
 	err = json.NewDecoder(res.Body).Decode(&station_list)
 	if err != nil {
-		return StationSet{}, err
+		return station_set, err
 	}
 
-	station_set := make(StationSet, len(station_list))
 	for i := range station_list {
-		station_set[station_list[i].Url] = &station_list[i]
+		station_set.add(&station_list[i])
 	}
 
 	return station_set, nil
