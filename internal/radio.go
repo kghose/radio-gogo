@@ -53,6 +53,9 @@ func (r *Radio) Refresh_servers() error {
 }
 
 func (r *Radio) Now_playing(station *Station) {
+	if r.User_data.Station_history == nil {
+		r.User_data.Station_history = make(StationSet)
+	}
 	r.CurrentStation = *station
 	r.User_data.Station_history[station.Url] = station
 }

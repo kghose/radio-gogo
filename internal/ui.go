@@ -15,6 +15,7 @@ type RadioUI struct {
 	player       Player
 	app          *tview.Application
 	search_bar   *tview.InputField
+	tab_title    *tview.TextView
 	station_list *tview.List
 	now_playing  *tview.TextView
 	status_bar   *tview.TextView
@@ -37,29 +38,32 @@ func (r *RadioUI) Run() {
 func (r *RadioUI) setup_UI(app *tview.Application) {
 
 	r.search_bar = tview.NewInputField().
-		SetLabel("Search ").
 		SetFieldWidth(80).
 		SetFieldBackgroundColor(tcell.ColorGreenYellow).
 		SetFieldTextColor(tcell.ColorBlack).
 		SetDoneFunc(r.Search)
+	r.tab_title = tview.NewTextView()
+	r.tab_title.SetTextAlign(tview.AlignCenter).
+		SetBackgroundColor(tcell.ColorBlue)
+	r.tab_title.SetTextColor(tcell.ColorWhiteSmoke)
 	r.station_list = tview.NewList().
 		ShowSecondaryText(true).
 		SetSelectedFunc(func(_ int, _ string, url string, _ rune) {
 			r.play(url)
 		})
-	r.station_list.SetTitle("Search")
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
 
 	grid := tview.NewGrid().
 		SetRows(1, -1, 4, 1).
-		SetColumns(0).
+		SetColumns(-1, 10).
 		SetBorders(true).
 		SetBordersColor(tcell.ColorGreenYellow)
 	grid.AddItem(r.search_bar, 0, 0, 1, 1, 0, 0, true)
-	grid.AddItem(r.station_list, 1, 0, 1, 1, 0, 0, false)
-	grid.AddItem(r.now_playing, 2, 0, 1, 1, 0, 0, false)
-	grid.AddItem(r.status_bar, 3, 0, 1, 1, 0, 0, false)
+	grid.AddItem(r.tab_title, 0, 1, 1, 1, 0, 0, false)
+	grid.AddItem(r.station_list, 1, 0, 1, 2, 0, 0, false)
+	grid.AddItem(r.now_playing, 2, 0, 1, 2, 0, 0, false)
+	grid.AddItem(r.status_bar, 3, 0, 1, 2, 0, 0, false)
 	app.SetRoot(grid, true).SetFocus(grid).SetInputCapture(r.input_capture)
 }
 
@@ -108,7 +112,7 @@ func (r *RadioUI) Search(key tcell.Key) {
 				fmt.Sprintf("Found %d stations.",
 					len(r.device.Stations)))
 
-			r.update_station_list(&r.device.Stations)
+			r.show_search()
 		})
 	}()
 
@@ -118,8 +122,8 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 func (r *RadioUI) update_station_list(stations *StationSet) {
 	r.station_list.Clear()
-	for _, station := range *stations {
-		r.station_list.AddItem(station.Name, station.Url, 0, nil)
+	for url := range *stations {
+		r.station_list.AddItem((*stations)[url].Name, url, 0, nil)
 	}
 	r.station_list.SetCurrentItem(0)
 	if r.station_list.GetItemCount() > 0 {
@@ -127,10 +131,24 @@ func (r *RadioUI) update_station_list(stations *StationSet) {
 	}
 }
 
+func (r *RadioUI) show_search() {
+	r.tab_title.SetText("Search")
+	r.update_station_list(
+		&r.device.Stations)
+}
+
+func (r *RadioUI) show_history() {
+	r.tab_title.SetText("History")
+	r.update_station_list(
+		&r.device.User_data.Station_history)
+}
+
 func (r *RadioUI) play(url string) {
-	resp := r.player.Play(url)
+	station := r.device.Stations[url]
+	resp := r.player.Play(station.Url)
 	r.status_bar.SetText(resp.Error)
-	r.now_playing.SetText(url)
+	r.device.Now_playing(station)
+	r.now_playing.SetText(station.Name)
 }
 
 func (r *RadioUI) periodically_update_stream_metadata() {
@@ -173,6 +191,10 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 			r.app.Stop()
 		case 'p':
 			r.player.Pause()
+		case 's':
+			r.show_search()
+		case 'h':
+			r.show_history()
 		}
 	}
 	return event
