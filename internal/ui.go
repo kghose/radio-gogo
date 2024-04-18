@@ -68,7 +68,7 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 		SetBackgroundColor(tcell.ColorDarkBlue)
 	r.tab_title.SetTextColor(tcell.ColorWhiteSmoke)
 	r.station_list = tview.NewList().
-		ShowSecondaryText(true).
+		ShowSecondaryText(false).
 		SetSelectedFunc(func(idx int, _ string, _ string, _ rune) {
 			r.play(idx)
 		})
@@ -150,7 +150,15 @@ func (r *RadioUI) update_station_list(list int) {
 
 	r.station_list.Clear()
 	for i := range stations.Stations {
-		r.station_list.AddItem(stations.Stations[i].Name, stations.Stations[i].Url, 0, nil)
+		r.station_list.AddItem(
+			fmt.Sprintf(
+				"%s [gray](%s)",
+				stations.Stations[i].Name,
+				stations.Stations[i].Url),
+			"",
+			0,
+			nil,
+		)
 	}
 	if r.station_list.GetItemCount() > 0 {
 		r.app.SetFocus(r.station_list)
