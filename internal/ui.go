@@ -21,6 +21,8 @@ type PaneState struct {
 	pane_index []int
 }
 
+var pane_name = [3]string{"Search", "History", "Favorites"}
+
 type RadioUI struct {
 	device       Radio
 	player       Player
@@ -67,8 +69,8 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	r.tab_title.SetTextColor(tcell.ColorWhiteSmoke)
 	r.station_list = tview.NewList().
 		ShowSecondaryText(true).
-		SetSelectedFunc(func(_ int, _ string, url string, _ rune) {
-			r.play(url)
+		SetSelectedFunc(func(idx int, _ string, _ string, _ rune) {
+			r.play(idx)
 		})
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
@@ -129,9 +131,9 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 			r.status_bar.SetText(
 				fmt.Sprintf("Found %d stations.",
-					r.device.Stations.Len()))
+					r.device.StationLists[STATION_LIST_SEARCH].Len()))
 
-			r.show_search()
+			r.update_station_list(STATION_LIST_SEARCH)
 		})
 	}()
 
@@ -139,46 +141,25 @@ func (r *RadioUI) Search(key tcell.Key) {
 
 }
 
-func (r *RadioUI) update_station_list(stations *StationSet) {
+func (r *RadioUI) update_station_list(list int) {
+	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
+
+	r.pane_state.pane = list
+	r.tab_title.SetText(pane_name[list])
+	stations := r.device.StationLists[list]
+
 	r.station_list.Clear()
 	for i := range stations.Stations {
 		r.station_list.AddItem(stations.Stations[i].Name, stations.Stations[i].Url, 0, nil)
 	}
-	r.station_list.SetCurrentItem(0)
 	if r.station_list.GetItemCount() > 0 {
 		r.app.SetFocus(r.station_list)
+		r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
 	}
 }
 
-func (r *RadioUI) show_search() {
-	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
-	r.tab_title.SetText("Search")
-	r.pane_state.pane = SEARCH_PANE
-	r.update_station_list(
-		r.device.Stations)
-	r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
-}
-
-func (r *RadioUI) show_history() {
-	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
-	r.tab_title.SetText("History")
-	r.pane_state.pane = HIST_PANE
-	r.update_station_list(
-		r.device.User_data.Station_history)
-	r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
-}
-
-func (r *RadioUI) show_favorites() {
-	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
-	r.tab_title.SetText("Favorites")
-	r.pane_state.pane = FAV_PANE
-	r.update_station_list(
-		r.device.User_data.Station_favorites)
-	r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
-}
-
-func (r *RadioUI) play(url string) {
-	station := r.device.Stations.By_url(url)
+func (r *RadioUI) play(idx int) {
+	station := r.device.StationLists[r.pane_state.pane].Stations[idx]
 	resp := r.player.Play(station.Url)
 	r.status_bar.SetText(resp.Error)
 	r.device.Now_playing(station)
@@ -226,11 +207,11 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 		case 'p':
 			r.player.Pause()
 		case 's':
-			r.show_search()
+			r.update_station_list(STATION_LIST_SEARCH)
 		case 'h':
-			r.show_history()
+			r.update_station_list(STATION_LIST_HIST)
 		case 'f':
-			r.show_favorites()
+			r.update_station_list(STATION_LIST_FAV)
 			//case '=':
 			//	r.add_to_favorites()
 		}

@@ -46,14 +46,26 @@ func NewStationSet() *StationSet {
 
 type Radio struct {
 	Servers        []Server
+	StationLists   [3]*StationSet
 	Stations       *StationSet
 	CurrentStation Station
 	CurrentServer  Server
 	User_data      UserData
 }
 
+const (
+	STATION_LIST_SEARCH = 0
+	STATION_LIST_HIST   = 1
+	STATION_LIST_FAV    = 2
+)
+
+var uSER_DATA_FILE = [3]string{"", "history.json", "favorites.json"}
+
 func NewRadio() Radio {
 	r := Radio{}
+	for i := 0; i < 3; i++ {
+		r.StationLists[i] = NewStationSet()
+	}
 	r.Stations = NewStationSet()
 	r.User_data = NewUserData()
 	return r
@@ -87,8 +99,9 @@ func (r *Radio) FindByTag(tag_list []string) error {
 	r.CurrentServer = Pick_random_server(r.Servers)
 
 	var err error
-	r.Stations, err = Advanced_station_search(tag_list, r.CurrentServer)
-	sort.Sort(r.Stations)
+	r.StationLists[STATION_LIST_SEARCH], err = Advanced_station_search(tag_list, r.CurrentServer)
+	sort.Sort(r.StationLists[STATION_LIST_SEARCH])
+	r.Stations = r.StationLists[STATION_LIST_SEARCH]
 	return err
 
 }
@@ -101,6 +114,7 @@ func (r *Radio) Refresh_servers() error {
 
 func (r *Radio) Now_playing(station *Station) {
 	r.CurrentStation = *station
+	r.StationLists[STATION_LIST_HIST].add(station)
 	r.User_data.Station_history.add(station)
 }
 
@@ -128,18 +142,27 @@ func user_data_file() (string, string, error) {
 		), err
 }
 
+func get_user_data_dir() (string, error) {
+	home := os.Getenv("HOME")
+	data_home := os.Getenv("XDG_DATA_HOME")
+	if data_home == "" {
+		data_home = path.Join(home, ".local", "share")
+	}
+	data_home = path.Join(data_home, USER_DATA_DIR)
+	err := os.MkdirAll(data_home, fs.FileMode(0777))
+	return data_home, err
+}
+
 func (r *Radio) Save_user_data() error {
-	hist_fname, fav_fname, err := user_data_file()
+	user_data_dir, err := get_user_data_dir()
 	if err != nil {
 		return err
 	}
-	if err = save_user_data_file(fav_fname, r.User_data.Station_favorites); err != nil {
-		return err
+	for _, i := range []int{STATION_LIST_FAV, STATION_LIST_HIST} {
+		if err = save_user_data_file(path.Join(user_data_dir, uSER_DATA_FILE[i]), r.StationLists[i]); err != nil {
+			return err
+		}
 	}
-	if err = save_user_data_file(hist_fname, r.User_data.Station_history); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -160,18 +183,16 @@ func save_user_data_file(fname string, data *StationSet) error {
 }
 
 func (r *Radio) Load_user_data() error {
-	hist_fname, fav_fname, err := user_data_file()
+	user_data_dir, err := get_user_data_dir()
 	if err != nil {
 		return err
 	}
 
-	if err = load_user_data_file(fav_fname, r.User_data.Station_favorites); err != nil {
-		return err
+	for _, i := range []int{STATION_LIST_FAV, STATION_LIST_HIST} {
+		if err = load_user_data_file(path.Join(user_data_dir, uSER_DATA_FILE[i]), r.StationLists[i]); err != nil {
+			return err
+		}
 	}
-	if err = load_user_data_file(hist_fname, r.User_data.Station_history); err != nil {
-		return err
-	}
-
 	return nil
 }
 
