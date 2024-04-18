@@ -10,9 +10,21 @@ import (
 
 const STATION_METADATA_REFRESH_INTERVAL = time.Second
 
+const (
+	SEARCH_PANE = 0
+	HIST_PANE   = 1
+	FAV_PANE    = 2
+)
+
+type PaneState struct {
+	pane       int
+	pane_index []int
+}
+
 type RadioUI struct {
 	device       Radio
 	player       Player
+	pane_state   PaneState
 	app          *tview.Application
 	search_bar   *tview.InputField
 	tab_title    *tview.TextView
@@ -23,6 +35,7 @@ type RadioUI struct {
 
 func (r *RadioUI) Run() {
 
+	r.pane_state.pane_index = []int{0, 0, 0}
 	r.device = NewRadio()
 	if err := r.device.Load_user_data(); err != nil {
 		panic(err)
@@ -138,15 +151,30 @@ func (r *RadioUI) update_station_list(stations *StationSet) {
 }
 
 func (r *RadioUI) show_search() {
+	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
 	r.tab_title.SetText("Search")
+	r.pane_state.pane = SEARCH_PANE
 	r.update_station_list(
 		r.device.Stations)
+	r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
 }
 
 func (r *RadioUI) show_history() {
+	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
 	r.tab_title.SetText("History")
+	r.pane_state.pane = HIST_PANE
 	r.update_station_list(
 		r.device.User_data.Station_history)
+	r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
+}
+
+func (r *RadioUI) show_favorites() {
+	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
+	r.tab_title.SetText("Favorites")
+	r.pane_state.pane = FAV_PANE
+	r.update_station_list(
+		r.device.User_data.Station_favorites)
+	r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
 }
 
 func (r *RadioUI) play(url string) {
@@ -201,6 +229,10 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 			r.show_search()
 		case 'h':
 			r.show_history()
+		case 'f':
+			r.show_favorites()
+			//case '=':
+			//	r.add_to_favorites()
 		}
 	}
 	return event
