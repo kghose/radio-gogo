@@ -10,9 +10,15 @@ import (
 
 const STATION_METADATA_REFRESH_INTERVAL = time.Second
 
+type UIState struct {
+	current_pane int
+	pane_state   [3]PaneState
+}
+
 type PaneState struct {
-	pane       int
-	pane_index []int
+	name   string
+	offset int
+	index  int
 }
 
 var pane_name = [3]string{"Search", "History", "Favorites"}
@@ -20,7 +26,7 @@ var pane_name = [3]string{"Search", "History", "Favorites"}
 type RadioUI struct {
 	device       Radio
 	player       Player
-	pane_state   PaneState
+	ui_state     UIState
 	app          *tview.Application
 	search_bar   *tview.InputField
 	tab_title    *tview.TextView
@@ -30,8 +36,6 @@ type RadioUI struct {
 }
 
 func (r *RadioUI) Run() {
-
-	r.pane_state.pane_index = []int{0, 0, 0}
 
 	r.device = NewRadio()
 	if err := r.device.Load_user_data(); err != nil {
@@ -45,7 +49,7 @@ func (r *RadioUI) Run() {
 	go r.periodically_update_stream_metadata()
 
 	go r.app.QueueUpdateDraw(func() {
-		r.update_station_list(STATION_LIST_HIST)
+		r.update_station_list(r.ui_state.current_pane)
 		r.app.SetFocus(r.search_bar)
 	})
 	if err := r.app.Run(); err != nil {
@@ -60,6 +64,11 @@ func (r *RadioUI) Run() {
 }
 
 func (r *RadioUI) setup_UI(app *tview.Application) {
+
+	r.ui_state.current_pane = STATION_LIST_HIST
+	r.ui_state.pane_state[STATION_LIST_SEARCH].name = "Search"
+	r.ui_state.pane_state[STATION_LIST_HIST].name = "History"
+	r.ui_state.pane_state[STATION_LIST_FAV].name = "Favorites"
 
 	r.search_bar = tview.NewInputField().
 		SetDoneFunc(r.Search)
@@ -142,10 +151,11 @@ func (r *RadioUI) Search(key tcell.Key) {
 }
 
 func (r *RadioUI) update_station_list(list int) {
-	r.pane_state.pane_index[r.pane_state.pane] = r.station_list.GetCurrentItem()
+	r.ui_state.pane_state[r.ui_state.current_pane].index = r.station_list.GetCurrentItem()
+	r.ui_state.pane_state[r.ui_state.current_pane].offset, _ = r.station_list.GetOffset()
 
-	r.pane_state.pane = list
-	r.tab_title.SetText(pane_name[list])
+	r.ui_state.current_pane = list
+	r.tab_title.SetText(r.ui_state.pane_state[list].name)
 	stations := r.device.StationLists[list]
 
 	r.station_list.Clear()
@@ -162,12 +172,13 @@ func (r *RadioUI) update_station_list(list int) {
 	}
 	if r.station_list.GetItemCount() > 0 {
 		r.app.SetFocus(r.station_list)
-		r.station_list.SetCurrentItem(r.pane_state.pane_index[r.pane_state.pane])
+		r.station_list.SetCurrentItem(r.ui_state.pane_state[list].index)
+		r.station_list.SetOffset(r.ui_state.pane_state[list].offset, 0)
 	}
 }
 
 func (r *RadioUI) play(idx int) {
-	station := r.device.StationLists[r.pane_state.pane].Stations[idx]
+	station := r.device.StationLists[r.ui_state.current_pane].Stations[idx]
 	resp := r.player.Play(station.Url)
 	r.status_bar.SetText(resp.Error)
 	r.device.Now_playing(station)
