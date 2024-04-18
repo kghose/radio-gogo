@@ -24,6 +24,9 @@ type RadioUI struct {
 func (r *RadioUI) Run() {
 
 	r.device = NewRadio()
+	if err := r.device.Load_user_data(); err != nil {
+		panic(err)
+	}
 
 	r.player.Start()
 	r.app = tview.NewApplication()
@@ -34,6 +37,10 @@ func (r *RadioUI) Run() {
 		r.app.Stop()
 	}
 	r.player.Quit()
+
+	if err := r.device.Save_user_data(); err != nil {
+		panic(err)
+	}
 
 }
 

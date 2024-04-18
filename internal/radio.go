@@ -105,32 +105,52 @@ func (r *Radio) Now_playing(station *Station) {
 }
 
 const (
-	USER_DATA_DIR  = "radio-gogo"
-	USER_DATA_FILE = "stations.json"
+	USER_DATA_DIR                    = "radio-gogo"
+	USER_DATA_STATION_HISTORY_FILE   = "history.json"
+	USER_DATA_STATION_FAVORITES_FILE = "favorites.json"
 )
 
-func user_data_file() (string, error) {
+func user_data_file() (string, string, error) {
 	home := os.Getenv("HOME")
 	data_home := os.Getenv("XDG_DATA_HOME")
 	if data_home == "" {
 		data_home = path.Join(home, ".local", "share")
 	}
+	data_home = path.Join(data_home, USER_DATA_DIR)
 	err := os.MkdirAll(data_home, fs.FileMode(0777))
-	return path.Join(data_home, USER_DATA_FILE), err
+	return path.Join(
+			data_home,
+			USER_DATA_STATION_HISTORY_FILE,
+		),
+		path.Join(
+			data_home,
+			USER_DATA_STATION_FAVORITES_FILE,
+		), err
 }
 
-func (r *Radio) Save_user_data(fname string) error {
-	fname, err := user_data_file()
+func (r *Radio) Save_user_data() error {
+	hist_fname, fav_fname, err := user_data_file()
 	if err != nil {
 		return err
 	}
+	if err = save_user_data_file(fav_fname, r.User_data.Station_favorites); err != nil {
+		return err
+	}
+	if err = save_user_data_file(hist_fname, r.User_data.Station_history); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func save_user_data_file(fname string, data *StationSet) error {
 	f, err := os.Create(fname)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	data_str, err := json.MarshalIndent(r.User_data, "", " ")
+	data_str, err := json.MarshalIndent(data.Stations, "", " ")
 	_, err = f.Write(data_str)
 	if err != nil {
 		return err
@@ -139,18 +159,39 @@ func (r *Radio) Save_user_data(fname string) error {
 	return nil
 }
 
-func (r *Radio) Load_user_data(fname string) error {
-	fname, err := user_data_file()
+func (r *Radio) Load_user_data() error {
+	hist_fname, fav_fname, err := user_data_file()
 	if err != nil {
 		return err
 	}
+
+	if err = load_user_data_file(fav_fname, r.User_data.Station_favorites); err != nil {
+		return err
+	}
+	if err = load_user_data_file(hist_fname, r.User_data.Station_history); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func load_user_data_file(fname string, station_set *StationSet) error {
+
 	data_bytes, err := os.ReadFile(fname)
+	if os.IsNotExist(err) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(data_bytes, &r.User_data)
-	if err != nil {
+
+	stations := []Station{}
+	if err = json.Unmarshal(data_bytes, &stations); err != nil {
 		return err
+	}
+
+	for i := range stations {
+		station_set.add(&stations[i])
 	}
 	return nil
 }
