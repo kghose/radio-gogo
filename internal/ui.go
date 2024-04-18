@@ -10,12 +10,6 @@ import (
 
 const STATION_METADATA_REFRESH_INTERVAL = time.Second
 
-const (
-	SEARCH_PANE = 0
-	HIST_PANE   = 1
-	FAV_PANE    = 2
-)
-
 type PaneState struct {
 	pane       int
 	pane_index []int
@@ -38,6 +32,7 @@ type RadioUI struct {
 func (r *RadioUI) Run() {
 
 	r.pane_state.pane_index = []int{0, 0, 0}
+
 	r.device = NewRadio()
 	if err := r.device.Load_user_data(); err != nil {
 		panic(err)
@@ -48,6 +43,11 @@ func (r *RadioUI) Run() {
 	r.setup_UI(r.app)
 	go r.RefreshServers()
 	go r.periodically_update_stream_metadata()
+
+	go r.app.QueueUpdateDraw(func() {
+		r.update_station_list(STATION_LIST_HIST)
+		r.app.SetFocus(r.search_bar)
+	})
 	if err := r.app.Run(); err != nil {
 		r.app.Stop()
 	}
