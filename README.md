@@ -1,6 +1,6 @@
 # Radio Go Go
 
-![](screen-shot.png)
+![](radio-gogo.apng)
 
     All we heard is radio ga ga
     Radio goo goo
@@ -9,12 +9,16 @@
 
 Simple terminal based radio player that uses [`mpv`][mpv] to play radio streams
 whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
-[Tera][tera].
+[Tera][tera] and I used it as an excuse to learn `golang`.
 
 [mpv]: https://mpv.io
 [radiobrowser]: https://www.radio-browser.info
 [tera]: https://github.com/shinokada/tera
 
+## Install
+1. Install `mpv`
+1. Clone this repository
+1. Start the program using `go run .`
 
 # Learning goals
 
