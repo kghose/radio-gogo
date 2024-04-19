@@ -24,6 +24,16 @@ func (s *StationSet) add(station *Station) {
 		s.urls[station.Url] = station
 	}
 }
+func (s *StationSet) remove(station *Station) {
+	new_stations := make([]*Station, 0, len(s.Stations))
+	for i := range s.Stations {
+		if s.Stations[i].Url != station.Url {
+			new_stations = append(new_stations, s.Stations[i])
+		}
+	}
+	s.Stations = new_stations
+	delete(s.urls, station.Url)
+}
 
 func (s *StationSet) By_url(url string) *Station {
 	return s.urls[url]

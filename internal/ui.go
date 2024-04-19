@@ -177,6 +177,21 @@ func (r *RadioUI) update_station_list(list int) {
 	}
 }
 
+func (r *RadioUI) favorite() {
+	idx := r.station_list.GetCurrentItem()
+	r.device.StationLists[STATION_LIST_FAV].add(
+		r.device.StationLists[r.ui_state.current_pane].Stations[idx],
+	)
+}
+
+func (r *RadioUI) remove() {
+	idx := r.station_list.GetCurrentItem()
+	r.device.StationLists[r.ui_state.current_pane].remove(
+		r.device.StationLists[r.ui_state.current_pane].Stations[idx],
+	)
+	r.update_station_list(r.ui_state.current_pane)
+}
+
 func (r *RadioUI) play(idx int) {
 	station := r.device.StationLists[r.ui_state.current_pane].Stations[idx]
 	resp := r.player.Play(station.Url)
@@ -231,8 +246,10 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 			r.update_station_list(STATION_LIST_HIST)
 		case 'f':
 			r.update_station_list(STATION_LIST_FAV)
-			//case '=':
-			//	r.add_to_favorites()
+		case '=':
+			r.favorite()
+		case '-':
+			r.remove()
 		}
 	}
 	return event
