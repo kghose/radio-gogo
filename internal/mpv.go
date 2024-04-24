@@ -83,12 +83,7 @@ func (p *Player) command(cmd []string) (resp MpvResponse) {
 
 	req_str, err := json.Marshal(request)
 
-	_, err = conn.Write(req_str)
-	if err != nil {
-		resp.Error = err.Error()
-		return resp
-	}
-	_, err = conn.Write([]byte("\n"))
+	_, err = conn.Write(append(req_str, []byte("\n")...))
 	if err != nil {
 		resp.Error = err.Error()
 		return resp
