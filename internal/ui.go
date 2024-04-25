@@ -72,6 +72,13 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 
 	r.search_bar = tview.NewInputField().
 		SetDoneFunc(r.Search)
+	r.search_bar.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyTAB {
+			r.app.SetFocus(r.station_list)
+		}
+		return event
+	})
+
 	r.tab_title = tview.NewTextView()
 	r.tab_title.SetTextAlign(tview.AlignCenter).
 		SetBackgroundColor(tcell.ColorDarkBlue)
@@ -81,6 +88,7 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 		SetSelectedFunc(func(idx int, _ string, _ string, _ rune) {
 			r.play(idx)
 		})
+	r.station_list.SetInputCapture(r.station_list_input_capture)
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
 
@@ -94,7 +102,10 @@ func (r *RadioUI) setup_UI(app *tview.Application) {
 	grid.AddItem(r.station_list, 1, 0, 1, 2, 0, 0, false)
 	grid.AddItem(r.now_playing, 2, 0, 1, 2, 0, 0, false)
 	grid.AddItem(r.status_bar, 3, 0, 1, 2, 0, 0, false)
-	app.SetRoot(grid, true).SetFocus(grid).SetInputCapture(r.input_capture)
+	app.SetRoot(grid, true).
+		SetFocus(grid).
+		EnableMouse(true).
+		EnablePaste(true)
 }
 
 func (r *RadioUI) RefreshServers() {
@@ -223,34 +234,31 @@ func (r *RadioUI) update_stream_metadata() {
 	)
 }
 
-func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyTab {
-		if r.app.GetFocus() == r.search_bar {
-			r.app.SetFocus(r.station_list)
-		} else {
-			r.app.SetFocus(r.search_bar)
-		}
-		return nil
-
+func (r *RadioUI) station_list_input_capture(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Key() {
+	case tcell.KeyTab:
+		r.app.SetFocus(r.search_bar)
+		return nil // Don't pass this on to the list - it changes the selection
+	case tcell.KeyDEL:
+		r.remove()
 	}
 
-	if r.app.GetFocus() != r.search_bar {
-		switch event.Rune() {
-		case 'q':
-			r.app.Stop()
-		case 'p':
-			r.player.Pause()
-		case 's':
-			r.update_station_list(STATION_LIST_SEARCH)
-		case 'h':
-			r.update_station_list(STATION_LIST_HIST)
-		case 'f':
-			r.update_station_list(STATION_LIST_FAV)
-		case '=':
-			r.favorite()
-		case '-':
-			r.remove()
-		}
+	switch event.Rune() {
+	case 'q':
+		r.app.Stop()
+	case 'p':
+		r.player.Pause()
+	case 's':
+		r.update_station_list(STATION_LIST_SEARCH)
+	case 'h':
+		r.update_station_list(STATION_LIST_HIST)
+	case 'f':
+		r.update_station_list(STATION_LIST_FAV)
+	case '=':
+		r.favorite()
+	case '-':
+		r.remove()
 	}
+
 	return event
 }
