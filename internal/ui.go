@@ -2,7 +2,6 @@ package radio
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -29,14 +28,11 @@ type RadioUI struct {
 	player       Player
 	ui_state     UIState
 	app          *tview.Application
-	grid         *tview.Grid
 	search_bar   *tview.InputField
 	tab_title    *tview.TextView
 	station_list *tview.List
 	now_playing  *tview.TextView
 	status_bar   *tview.TextView
-	help_modal   *tview.Modal
-	keymap       KeyMap
 }
 
 func (r *RadioUI) Run() {
@@ -48,9 +44,7 @@ func (r *RadioUI) Run() {
 
 	r.player.Start()
 	r.app = tview.NewApplication()
-	r.setup_UI()
-	r.setup_keymap()
-
+	r.setup_UI(r.app)
 	go r.RefreshServers()
 	go r.periodically_update_stream_metadata()
 
@@ -69,7 +63,7 @@ func (r *RadioUI) Run() {
 
 }
 
-func (r *RadioUI) setup_UI() {
+func (r *RadioUI) setup_UI(app *tview.Application) {
 
 	r.ui_state.current_pane = STATION_LIST_HIST
 	r.ui_state.pane_state[STATION_LIST_SEARCH].name = "Search"
@@ -89,20 +83,18 @@ func (r *RadioUI) setup_UI() {
 		})
 	r.now_playing = tview.NewTextView()
 	r.status_bar = tview.NewTextView()
-	r.help_modal = tview.NewModal()
 
-	r.grid = tview.NewGrid().
+	grid := tview.NewGrid().
 		SetRows(1, -1, 4, 1).
 		SetColumns(10, -1).
 		SetBorders(true).
 		SetBordersColor(tcell.ColorGreenYellow)
-	r.grid.AddItem(r.search_bar, 0, 1, 1, 1, 0, 0, true)
-	r.grid.AddItem(r.tab_title, 0, 0, 1, 1, 0, 0, false)
-	r.grid.AddItem(r.station_list, 1, 0, 1, 2, 0, 0, false)
-	r.grid.AddItem(r.now_playing, 2, 0, 1, 2, 0, 0, false)
-	r.grid.AddItem(r.status_bar, 3, 0, 1, 2, 0, 0, false)
-	r.app.SetRoot(r.grid, true).SetFocus(r.grid).SetInputCapture(r.input_capture)
-
+	grid.AddItem(r.search_bar, 0, 1, 1, 1, 0, 0, true)
+	grid.AddItem(r.tab_title, 0, 0, 1, 1, 0, 0, false)
+	grid.AddItem(r.station_list, 1, 0, 1, 2, 0, 0, false)
+	grid.AddItem(r.now_playing, 2, 0, 1, 2, 0, 0, false)
+	grid.AddItem(r.status_bar, 3, 0, 1, 2, 0, 0, false)
+	app.SetRoot(grid, true).SetFocus(grid).SetInputCapture(r.input_capture)
 }
 
 func (r *RadioUI) RefreshServers() {
@@ -242,63 +234,23 @@ func (r *RadioUI) input_capture(event *tcell.EventKey) *tcell.EventKey {
 
 	}
 
-	if r.app.GetFocus() == r.station_list {
-		if mapping, ok := r.keymap[event.Rune()]; ok {
-			mapping.fn()
-		} else {
-			//r.show_help()
+	if r.app.GetFocus() != r.search_bar {
+		switch event.Rune() {
+		case 'q':
+			r.app.Stop()
+		case 'p':
+			r.player.Pause()
+		case 's':
+			r.update_station_list(STATION_LIST_SEARCH)
+		case 'h':
+			r.update_station_list(STATION_LIST_HIST)
+		case 'f':
+			r.update_station_list(STATION_LIST_FAV)
+		case '=':
+			r.favorite()
+		case '-':
+			r.remove()
 		}
 	}
 	return event
-}
-
-type KeyMap map[rune]KeyMapping
-
-type KeyMapping struct {
-	fn   func()
-	help string
-}
-
-func (r *RadioUI) setup_keymap() {
-	r.keymap = KeyMap{
-		'q': KeyMapping{
-			fn:   r.app.Stop,
-			help: "Quit",
-		},
-		'p': KeyMapping{
-			fn:   func() { r.player.Pause() },
-			help: "Pause/Unpause"},
-		's': KeyMapping{
-			fn:   func() { r.update_station_list(STATION_LIST_SEARCH) },
-			help: "Search pane",
-		},
-		'h': KeyMapping{
-			fn:   func() { r.update_station_list(STATION_LIST_HIST) },
-			help: "History pane",
-		},
-		'f': KeyMapping{
-			fn:   func() { r.update_station_list(STATION_LIST_FAV) },
-			help: "Favorites pane",
-		},
-		'=': KeyMapping{fn: r.favorite, help: "Add to favorites"},
-		'-': KeyMapping{fn: r.remove, help: "Remove from list"},
-		'?': KeyMapping{fn: r.show_help, help: "Help"},
-	}
-
-	var b strings.Builder
-	for _, key := range []rune{'s', 'h', 'f', '=', '-', 'p', 'q', '?'} {
-		fmt.Fprintf(&b, "%c : %s\n", key, r.keymap[key].help)
-	}
-
-	r.help_modal.SetText(b.String()).
-		AddButtons([]string{"OK"}).
-		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			r.grid.RemoveItem(r.help_modal)
-			r.app.SetFocus(r.station_list)
-		})
-}
-
-func (r *RadioUI) show_help() {
-	r.grid.AddItem(r.help_modal, 3, 0, 1, 2, 0, 0, true)
-	r.app.SetFocus(r.help_modal)
 }
