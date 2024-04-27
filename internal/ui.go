@@ -45,9 +45,10 @@ func (r *RadioUI) Run() {
 	r.player.Start()
 	r.app = tview.NewApplication()
 	r.setup_UI(r.app)
+
 	go r.RefreshServers()
 	go r.periodically_update_stream_metadata()
-
+	go r.app.QueueUpdateDraw(r.show_help)
 	go r.app.QueueUpdateDraw(func() {
 		r.update_station_list(r.ui_state.current_pane)
 		r.app.SetFocus(r.search_bar)
@@ -261,4 +262,10 @@ func (r *RadioUI) station_list_input_capture(event *tcell.EventKey) *tcell.Event
 	}
 
 	return event
+}
+
+func (r *RadioUI) show_help() {
+	r.now_playing.SetText(`(q)uit, (p)ause, (s)earch pane, (h)istory, (f)avorites
+(=) add to favorites, (- or DEL) remove from favorites
+(TAB) switch between search bar and station list`)
 }
