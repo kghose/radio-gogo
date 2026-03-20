@@ -1,6 +1,6 @@
 module github.com/kghose/radio-go-go
 
-go 1.21.6
+go 1.25
 
 require (
 	github.com/gdamore/tcell/v2 v2.7.1
