@@ -1,4 +1,7 @@
 /*
+
+Radio object that 
+
  */
 package radio
 
@@ -99,10 +102,12 @@ type Server struct {
 	Err  error
 }
 
+/*
 type Station struct {
 	Name string
 	Url  string
 }
+*/
 
 func (r *Radio) FindByTag(tag_list []string) error {
 

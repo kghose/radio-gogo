@@ -1,75 +1,115 @@
-package radio
+/*
+Functions to find and query radio browser servers
+*/
+
+package radio_browser
 
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"maps"
 	"math/rand"
 	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 )
 
 const (
-	RadioGoGoAppString     = "radiogogo"
-	RadioGoGoVersion       = "0.1"
-	Radio_browser_info_url = "all.api.radio-browser.info"
+	appString          = "radiogogo"
+	appVersion         = "0.2"
+	radioBrowserAPIUrl = "all.api.radio-browser.info"
+	searchLimit = "10000"
 )
 
-func Get_list_of_available_servers() ([]Server, error) {
-	servers := []Server{}
-	ips, err := net.LookupIP(Radio_browser_info_url)
+func GetAvailableServers() ([]string, error) {
+	ips, err := net.LookupIP(radioBrowserAPIUrl)
 	if err != nil {
-		return servers, err
+		slog.Error("DNS lookup failed", "Host", radioBrowserAPIUrl)
+		return []string{}, err
 	}
+
+	servers_set := make(map[string]struct{})
 	for _, ip := range ips {
-		names, err := net.LookupAddr(ip.String())
-		for _, name := range names {
-			servers = append(servers, Server{
-				Name: "https://" + strings.TrimSuffix(name, "."),
-				IP:   ip.String(),
-				Err:  err,
-			})
+		addrs, err := net.LookupAddr(ip.String())
+		if err != nil {
+			slog.Error("Address look up failed", "IP", ip)
+			continue
+		}
+		for _, addr := range addrs {
+			url := "https://" + strings.TrimSuffix(addr, ".")
+			servers_set[url] = struct{}{}
 		}
 	}
-	return servers, nil
+
+	return slices.Collect(maps.Keys(servers_set)), nil
 }
 
-func Pick_random_server(servers []Server) Server {
+func PickRandomServer(servers []string) string {
 	return servers[rand.Intn(len(servers))]
 }
 
-func Advanced_station_search(tag_list []string, server Server) (*StationSet, error) {
-	station_set := NewStationSet()
+type Station struct {
+	ChangeUUID  string  `json:"changeuuid"`
+	StationUUID string  `json:"stationuuid"`
+	Name        string  `json:"name"`
+	URL         string  `json:"url"`
+	URLResolved string  `json:"url_resolved"`
+	Homepage    string  `json:"homepage"`
+	Favicon     string  `json:"favicon"`
+	Tags        string  `json:"tags"`
+	CountryCode string  `json:"countrycode"`
+	State       string  `json:"state"`
+	Language    string  `json:"language"`
+	Latitude    float64 `json:"geo_lat"`
+	Longitude   float64 `json:"geo_long"`
+}
 
-	url := server.Name + "/json/stations/search"
+func StationSearch(comma_separated_keywords string, server_url string) ([]Station, error) {
+
+	stations := []Station{}
+
+	url := server_url + "/json/stations/search"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return station_set, err
+		slog.Error("Setting up request failed", "Error", err)
+		return stations, err
 	}
 
 	req.Header.Add(
 		"User-Agent",
-		fmt.Sprintf("%s/%s", RadioGoGoAppString, RadioGoGoVersion))
+		fmt.Sprintf("%s/%s", appString, appVersion))
 	q := req.URL.Query()
-	q.Add("tagList", strings.Join(tag_list, ","))
+	q.Add("tagList", comma_separated_keywords)
 	q.Add("hidebroken", strconv.FormatBool(true))
+	q.Add("limit", searchLimit)
 
 	req.URL.RawQuery = q.Encode()
 	res, err := new(http.Client).Do(req)
 	if err != nil {
-		return station_set, err
+		slog.Error("Search failed", "Error", err)
+		return stations, err
 	}
 	defer res.Body.Close()
-	var station_list []Station
-	err = json.NewDecoder(res.Body).Decode(&station_list)
+	err = json.NewDecoder(res.Body).Decode(&stations)
 	if err != nil {
-		return station_set, err
+		slog.Error("Error parsing station data", "Error", err)
+		return stations, err
 	}
 
-	for i := range station_list {
-		station_set.add(&station_list[i])
-	}
+	return dedupeStationList(stations), nil
+}
 
-	return station_set, nil
+func dedupeStationList(stations []Station) []Station {
+	seen := make(map[string]bool)
+	deduped_stations := []Station{}
+	for _, station := range stations {
+		if !seen[station.URL] {
+			seen[station.URL] = true
+			deduped_stations = append(deduped_stations, station)
+		}
+	}
+	return deduped_stations
 }
