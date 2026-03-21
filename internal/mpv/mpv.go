@@ -1,4 +1,4 @@
-package mpv 
+package mpv
 
 import (
 	"bufio"
@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
-	"strconv"
+	"time"
 )
 
-const MPV_SOCKET = "/tmp/mpv.sock"
+const (
+	mpvSocket = "/tmp/mpv.sock"
+	mpvWait   = 1 * time.Second
+)
 
 type MpvRequest struct {
 	Command    []string `json:"command"`
@@ -36,13 +39,15 @@ type Player struct {
 }
 
 func (p *Player) Start() {
+	p.request_id = 0
 	cmd := exec.Command(
 		"mpv",
-		fmt.Sprintf("--input-ipc-server=%s", MPV_SOCKET),
+		fmt.Sprintf("--input-ipc-server=%s", mpvSocket),
 		"--idle=yes",
 		"--profile=low-latency",
 	)
 	cmd.Start()
+	time.Sleep(mpvWait) // mpv takes a tiny bit to startup and have the socket ready
 }
 
 func (p *Player) Play(url string) MpvResponse {
@@ -52,8 +57,10 @@ func (p *Player) Play(url string) MpvResponse {
 }
 
 func (p *Player) TogglePause() MpvResponse {
-        p.playing = !p.playing
-	return p.command([]string{"set", "pause", strconv.FormatBool(p.playing)})
+	p.command([]string{"cycle", "pause"}) // Most reliable way to pause/unpause
+	r := p.command([]string{"get_property", "pause"})
+	p.playing = string(r.Data) == "true"
+	return r
 }
 
 func (p *Player) Meta() MpvMetadata {
@@ -69,11 +76,12 @@ func (p *Player) Quit() MpvResponse {
 
 func (p *Player) command(cmd []string) (resp MpvResponse) {
 	resp = MpvResponse{}
-	conn, err := net.Dial("unix", MPV_SOCKET)
+	conn, err := net.Dial("unix", mpvSocket)
 	if err != nil {
 		resp.Error = err.Error()
 		return resp
 	}
+	defer conn.Close()
 
 	request := MpvRequest{Command: cmd, Request_id: p.request_id}
 	p.request_id++
