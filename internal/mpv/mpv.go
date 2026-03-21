@@ -1,4 +1,4 @@
-package radio
+package mpv 
 
 import (
 	"bufio"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
+	"strconv"
 )
 
 const MPV_SOCKET = "/tmp/mpv.sock"
@@ -50,13 +51,9 @@ func (p *Player) Play(url string) MpvResponse {
 	return p.command([]string{"loadfile", url})
 }
 
-func (p *Player) Pause() MpvResponse {
-	if p.playing {
-		p.playing = false
-		return p.command([]string{"stop"})
-	} else {
-		return p.Play(p.url)
-	}
+func (p *Player) TogglePause() MpvResponse {
+        p.playing = !p.playing
+	return p.command([]string{"set", "pause", strconv.FormatBool(p.playing)})
 }
 
 func (p *Player) Meta() MpvMetadata {
