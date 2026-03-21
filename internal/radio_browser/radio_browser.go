@@ -21,7 +21,7 @@ const (
 	appString          = "radiogogo"
 	appVersion         = "0.2"
 	radioBrowserAPIUrl = "all.api.radio-browser.info"
-	searchLimit = "10000"
+	searchLimit        = "10000"
 )
 
 func GetAvailableServers() ([]string, error) {
@@ -106,8 +106,8 @@ func dedupeStationList(stations []Station) []Station {
 	seen := make(map[string]bool)
 	deduped_stations := []Station{}
 	for _, station := range stations {
-		if !seen[station.URL] {
-			seen[station.URL] = true
+		if !seen[station.URLResolved] {
+			seen[station.URLResolved] = true
 			deduped_stations = append(deduped_stations, station)
 		}
 	}
