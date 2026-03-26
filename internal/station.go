@@ -88,3 +88,47 @@ func sortList(stations []Station) {
 		}
 	})
 }
+
+func Favorites(stations []Station) []Station {
+	favoriteStations := []Station{}
+	for i := range stations {
+		if stations[i].Favorite {
+			favoriteStations = append(favoriteStations, stations[i])
+		}
+	}
+	return favoriteStations
+}
+
+// The url to favorite can come from the history list or the search list
+// Where ever it comes from, we have to ensure it is in the history list
+// with the Favorite flag set and return the refreshed history list
+func AddToFavorites(url string, searchResult []Station, history []Station) []Station {
+	stationDetails := radioBrowser.Station{}
+	for i := range searchResult {
+		if searchResult[i].Details.URLResolved == url {
+			stationDetails = searchResult[i].Details
+			break
+		}
+	}
+	for i := range history {
+		if history[i].Details.URLResolved == url {
+			if stationDetails.URLResolved == url {
+				// The station is in the search and history
+				// update the details and the last played time
+				history[i].Details = stationDetails
+				history[i].Favorite = true
+				return history
+			} else {
+				// It's just in the history
+				history[i].Favorite = true
+				return history
+			}
+		}
+	}
+
+	// The station is not in the history
+	newStation := Station{stationDetails, time.Time{}, true}
+	history = slices.Insert(history, 0, newStation)
+	sortList(history)
+	return history
+}

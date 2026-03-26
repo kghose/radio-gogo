@@ -16,14 +16,6 @@ import (
 
 var searchBoxWidth = 50
 
-type StationListRole int
-const (
-	HISTORY StationListRole = iota
-	FAVORITES
-	SEARCH
-)
-
-
 type App struct {
 	mpvPlayer mpv.Player
 
@@ -68,7 +60,10 @@ func (app *App) playThis(_ int, _ string, url string, _ rune) {
 	r := app.mpvPlayer.Play(url)
 	slog.Info(r.Error)
 	app.history = radio.AddToHistory(url, app.searchResult, app.history)
-	// app.setStationList(app.history)
+}
+
+func (app *App) favoriteThis(url string) {
+	app.history = radio.AddToFavorites(url, app.searchResult, app.history)
 }
 
 func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
@@ -79,6 +74,12 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		app.setStationList(app.searchResult)
 	case 'S':
 		app.pages.ShowPage("Search")
+	case 'f':
+		app.setStationList(radio.Favorites(app.history))
+	case 'F':
+		_, url := app.stationsListView.GetItemText(
+			app.stationsListView.GetCurrentItem())
+		app.favoriteThis(url)
 	case 'p':
 		app.mpvPlayer.TogglePause()
 	case 'q':
