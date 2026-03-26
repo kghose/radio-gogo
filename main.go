@@ -31,6 +31,7 @@ func setStationList(stations []radio.Station) {
 	}
 }
 
+var searchBoxWidth = 50
 var searchBarInputField *tview.InputField
 
 func searchBarDone(key tcell.Key) {
@@ -88,7 +89,7 @@ func main() {
 	history, err = radio.LoadHistory()
 
 	searchBarInputField = tview.NewInputField()
-	searchBarInputField.SetFieldWidth(70).
+	searchBarInputField.SetFieldWidth(searchBoxWidth).
 		SetDoneFunc(searchBarDone)
 
 	app = tview.NewApplication()
@@ -96,9 +97,10 @@ func main() {
 	pages = tview.NewPages()
 
 	searchBar := tview.NewGrid().
-		SetColumns(0, 80, 0).
-		SetRows(0, 1, 0).
-		AddItem(searchBarInputField, 1, 1, 1, 1, 0, 0, true)
+		SetColumns(1, searchBoxWidth, 1).
+		SetRows(1).
+		SetBorders(true).
+		AddItem(searchBarInputField, 0, 1, 1, 1, 0, 0, true)
 
 	stationsListView = tview.NewList()
 
@@ -112,7 +114,7 @@ func main() {
 	stationsListView.SetInputCapture(userKeyPress)
 
 	pages.AddPage("Stations", stationsListView, true, true)
-	pages.AddPage("Search", searchBar, true, true)
+	pages.AddPage("Search", searchBar, true, false)
 
 	if err := app.SetRoot(pages, true).Run(); err != nil {
 		panic(err)
