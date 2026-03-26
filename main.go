@@ -16,6 +16,14 @@ import (
 
 var searchBoxWidth = 50
 
+type StationListRole int
+const (
+	HISTORY StationListRole = iota
+	FAVORITES
+	SEARCH
+)
+
+
 type App struct {
 	mpvPlayer mpv.Player
 
@@ -54,6 +62,13 @@ func (app *App) searchBarDone(key tcell.Key) {
 		// Close the popup without doing anything
 		app.pages.SwitchToPage("Stations")
 	}
+}
+
+func (app *App) playThis(_ int, _ string, url string, _ rune) {
+	r := app.mpvPlayer.Play(url)
+	slog.Info(r.Error)
+	app.history = radio.AddToHistory(url, app.searchResult, app.history)
+	// app.setStationList(app.history)
 }
 
 func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
@@ -105,14 +120,7 @@ func main() {
 		AddItem(app.searchBarInputField, 0, 1, 1, 1, 0, 0, true)
 
 	app.stationsListView = tview.NewList()
-
-	app.stationsListView.SetSelectedFunc(
-		func(_ int, _ string, url string, _ rune) {
-			r := app.mpvPlayer.Play(url)
-			slog.Info(r.Error)
-		},
-	)
-
+	app.stationsListView.SetSelectedFunc(app.playThis)
 	app.stationsListView.SetInputCapture(app.userKeyPress)
 
 	app.pages.AddPage("Stations", app.stationsListView, true, true)
