@@ -65,6 +65,8 @@ func userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		setStationList(searchResult)
 	case 'S':
 		pages.ShowPage("Search")
+	case 'p':
+		mpv_player.TogglePause()
 	case 'q':
 		app.Stop()
 	default:
