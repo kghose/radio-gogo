@@ -14,61 +14,60 @@ import (
 	"github.com/rivo/tview"
 )
 
-// We could have encapsulated all this as a struct, but instead
-// we simply choose to use main.go as a struct like unit.
-var mpv_player = mpv.Player{}
+var searchBoxWidth = 50
 
-var server string
+type App struct {
+	mpvPlayer mpv.Player
 
-var searchResult []radio.Station
-var history []radio.Station
+	server string
 
-var app *tview.Application
+	searchResult []radio.Station
+	history      []radio.Station
 
-func setStationList(stations []radio.Station) {
-	stationsListView.Clear()
+	ui                  *tview.Application
+	stationsListView    *tview.List
+	searchBarInputField *tview.InputField
+	pages               *tview.Pages
+}
+
+func (app *App) setStationList(stations []radio.Station) {
+	app.stationsListView.Clear()
 	for _, station := range stations {
-		stationsListView.AddItem(
+		app.stationsListView.AddItem(
 			station.Details.Name, station.Details.URLResolved, 0, nil)
 	}
 }
 
-var searchBoxWidth = 50
-var searchBarInputField *tview.InputField
-
-func searchBarDone(key tcell.Key) {
+func (app *App) searchBarDone(key tcell.Key) {
 	if key == tcell.KeyEnter {
-		keywords := searchBarInputField.GetText()
+		keywords := app.searchBarInputField.GetText()
 		slog.Info(keywords)
-		stations, err := radio_browser.StationSearch(keywords, server)
+		stations, err := radio_browser.StationSearch(keywords, app.server)
 		if err != nil {
 			slog.Error("Error searching for stations.")
 		}
-		searchResult = radio.SearchResults(stations, history)
-		setStationList(searchResult)
-		pages.SwitchToPage("Stations")
+		app.searchResult = radio.SearchResults(stations, app.history)
+		app.setStationList(app.searchResult)
+		app.pages.SwitchToPage("Stations")
 	}
 	if key == tcell.KeyEsc {
 		// Close the popup without doing anything
-		pages.SwitchToPage("Stations")
+		app.pages.SwitchToPage("Stations")
 	}
 }
 
-var pages *tview.Pages
-var stationsListView *tview.List
-
-func userKeyPress(event *tcell.EventKey) *tcell.EventKey {
+func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
 	case 'h':
-		setStationList(history)
+		app.setStationList(app.history)
 	case 's':
-		setStationList(searchResult)
+		app.setStationList(app.searchResult)
 	case 'S':
-		pages.ShowPage("Search")
+		app.pages.ShowPage("Search")
 	case 'p':
-		mpv_player.TogglePause()
+		app.mpvPlayer.TogglePause()
 	case 'q':
-		app.Stop()
+		app.ui.Stop()
 	default:
 		return event
 	}
@@ -76,46 +75,50 @@ func userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func main() {
-	mpv_player.Start()
-	defer mpv_player.Quit()
+
+	app := App{}
+
+	app.mpvPlayer = mpv.Player{}
+	app.mpvPlayer.Start()
+	defer app.mpvPlayer.Quit()
 
 	servers, err := radio_browser.GetAvailableServers()
 	if err != nil {
 		log.Fatal("Could not find radio browser servers")
 	}
 
-	server = radio_browser.PickRandomServer(servers)
-	history, err = radio.LoadHistory()
+	app.server = radio_browser.PickRandomServer(servers)
+	app.history, err = radio.LoadHistory()
 
-	searchBarInputField = tview.NewInputField()
-	searchBarInputField.SetFieldWidth(searchBoxWidth).
-		SetDoneFunc(searchBarDone)
+	app.searchBarInputField = tview.NewInputField()
+	app.searchBarInputField.SetFieldWidth(searchBoxWidth).
+		SetDoneFunc(app.searchBarDone)
 
-	app = tview.NewApplication()
+	app.ui = tview.NewApplication()
 
-	pages = tview.NewPages()
+	app.pages = tview.NewPages()
 
 	searchBar := tview.NewGrid().
 		SetColumns(1, searchBoxWidth, 1).
 		SetRows(1).
 		SetBorders(true).
-		AddItem(searchBarInputField, 0, 1, 1, 1, 0, 0, true)
+		AddItem(app.searchBarInputField, 0, 1, 1, 1, 0, 0, true)
 
-	stationsListView = tview.NewList()
+	app.stationsListView = tview.NewList()
 
-	stationsListView.SetSelectedFunc(
+	app.stationsListView.SetSelectedFunc(
 		func(_ int, _ string, url string, _ rune) {
-			r := mpv_player.Play(url)
+			r := app.mpvPlayer.Play(url)
 			slog.Info(r.Error)
 		},
 	)
 
-	stationsListView.SetInputCapture(userKeyPress)
+	app.stationsListView.SetInputCapture(app.userKeyPress)
 
-	pages.AddPage("Stations", stationsListView, true, true)
-	pages.AddPage("Search", searchBar, true, false)
+	app.pages.AddPage("Stations", app.stationsListView, true, true)
+	app.pages.AddPage("Search", searchBar, true, false)
 
-	if err := app.SetRoot(pages, true).Run(); err != nil {
+	if err := app.ui.SetRoot(app.pages, true).Run(); err != nil {
 		panic(err)
 	}
 
