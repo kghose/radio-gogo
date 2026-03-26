@@ -16,6 +16,8 @@ import (
 
 // We could have encapsulated all this as a struct, but instead
 // we simply choose to use main.go as a struct like unit.
+var mpv_player = mpv.Player{}
+
 var server string
 
 var searchResult []radio.Station
@@ -56,27 +58,22 @@ var pages *tview.Pages
 var stationsListView *tview.List
 
 func userKeyPress(event *tcell.EventKey) *tcell.EventKey {
-	if event.Rune() == 'h' {
+	switch event.Rune() {
+	case 'h':
 		setStationList(history)
-		return nil
-	}
-	if event.Rune() == 's' {
+	case 's':
 		setStationList(searchResult)
-		return nil
-	}
-	if event.Rune() == 'S' {
+	case 'S':
 		pages.ShowPage("Search")
-		return nil
-	}
-	if event.Rune() == 'q' {
+	case 'q':
 		app.Stop()
-		return nil
+	default:
+		return event
 	}
-	return event
+	return nil
 }
 
 func main() {
-	mpv_player := mpv.Player{}
 	mpv_player.Start()
 	defer mpv_player.Quit()
 
@@ -121,4 +118,3 @@ func main() {
 	}
 
 }
-
