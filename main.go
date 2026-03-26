@@ -7,7 +7,6 @@ import (
 	mpv "github.com/kghose/radio-go-go/internal/mpv"
 	radio_browser "github.com/kghose/radio-go-go/internal/radio_browser"
 	//	"github.com/rivo/tview"
-	"log"
 	"log/slog"
 	//	"time"
 	"github.com/gdamore/tcell/v2"
@@ -90,7 +89,11 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
+
 func main() {
+	slogger, closeFunc := radio.SetupLoggingToFile()
+	defer closeFunc()
+	slog.SetDefault(slogger)
 
 	app := App{}
 
@@ -100,7 +103,7 @@ func main() {
 
 	servers, err := radio_browser.GetAvailableServers()
 	if err != nil {
-		log.Fatal("Could not find radio browser servers")
+		slog.Error("Could not find radio browser servers")
 	}
 
 	app.server = radio_browser.PickRandomServer(servers)
