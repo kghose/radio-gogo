@@ -1,13 +1,103 @@
+/*
+
+Use tview to create a TUI
+
+*/
+
 package radio
 
 import (
-	"fmt"
-	"time"
+	//	"fmt"
+//	"log/slog"
+	//	"time"
 
-	"github.com/gdamore/tcell/v2"
+//	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
+// Create the main application. Pass in call backs that perform a variety of functions
+func MainApp() *tview.Application {
+	app := tview.NewApplication()
+
+	pages := tview.NewPages()
+	stationsListView := tview.NewList()
+	pages.AddPage("Stations", stationsListView, true, true)
+
+	if err := app.SetRoot(pages, true).Run(); err != nil {
+		panic(err)
+	}
+	return app
+}
+
+/*
+func getStationsListView(historyFunc HistoryFunc, searchFunc SearchFunc, playThisFunc PlayThisFunc) tview.Primitive {
+	stationList := tview.NewList()
+	stationList.SetSelectedFunc(
+		func(_ int, _ string, url string, _ rune) { playThisFunc(url) },
+	)
+
+	stationList.SetInputCapture(
+		func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Rune() == 'h' {
+				setStationList(historyFunc(), stationList)
+				return nil
+			}
+			if event.Rune() == 's' {
+				setStationList(historyFunc(), stationList)
+				return nil
+			}
+			return event
+		})
+
+	return stationList
+}
+
+// We intercept particular keys on the list view ...
+func setListInputCapture(stationList *tview.List) {
+	stationList.SetInputCapture(
+		func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Rune() == 'h' {
+				setStationList(historyFunc(), stationList)
+				return nil
+			}
+			if event.Rune() == 's' {
+				setStationList(historyFunc(), stationList)
+				return nil
+			}
+			return event
+		})
+
+}
+
+func setStationList(stations []Station, stationList *tview.List) {
+	stationList.Clear()
+	for _, station := range stations {
+		stationList.AddItem(station.Details.Name, station.Details.URLResolved, 0, nil)
+	}
+}
+
+func SearchBar(app *tview.Application) tview.Primitive {
+	inputField := tview.NewInputField()
+	inputField.SetFieldWidth(70).
+		SetDoneFunc(func(key tcell.Key) {
+			if key == tcell.KeyEnter {
+				app.Stop()
+				slog.Info(inputField.GetText())
+			}
+			if key == tcell.KeyEsc {
+			}
+		})
+
+	return tview.NewGrid().
+		SetColumns(1).
+		SetRows(1).
+		AddItem(inputField, 0, 0, 1, 1, 0, 0, true)
+
+}
+
+*/
+
+/*
 const STATION_METADATA_REFRESH_INTERVAL = time.Second
 
 type UIState struct {
@@ -269,3 +359,5 @@ func (r *RadioUI) show_help() {
 (=) add to favorites, (- or DEL) remove from favorites
 (TAB) switch between search bar and station list`)
 }
+
+*/

@@ -21,22 +21,19 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 1. Start the program using `go run .`
 
 ## Manual
-1. On startup you will see the history pane and a search bar.
-1. To search, type a search term and hit enter. The view will switch to the 
-   search pane. If stations are found, focus will shift to the search result 
-list.
+1. On startup you will see the history list. It is ordered with most recent
+   played first, then alphabetically by station name.
 1. Use the arrow keys to navigate the station list.
-1. Press enter to start playing the station.
+1. Press <Enter> to start playing the station.
+1. Press "h" to see history list
+1. Press "s" to see the search results
+1. Press "f" to show just the favorites in current list
+1. Press "S" to reveal the search bar. Type in comma separated keywords +
+   <Enter> to search.
+1. Press "=" to add station to favorites
+1. Press "-" to remove station from favorites
+1. Press "-" to remove station from current list if it isn't a favorite
 
-```
-TAB - switch between search and station list
-ENTER - play selected station
-s - search pane
-h - history pane
-f - favorites pane
-= - add station to favorites
-- - remove station from current list
-```
 
 ## Errors
 1. Radio Go Go will keep searching for Radio Browser servers until it gets a 
@@ -49,9 +46,20 @@ History and favorites are stored in JSON files under `$XDG_DATA_HOME` if it is
 set or `.local/share/radio-gogo/` 
 
 
+## Data structures and algorithms
+
+Internally we keep two lists of stations.
+
+1. History
+1. Search result
+
+Stations are added to the history when they are played or added to favorites
+without playing. 
+
+
 # Learning goals
 
-1. goroutines and Communication between goroutines
+1. goroutines and communication between goroutines
 1. Sockets (communicate with mpv)
 1. Networking basics
 1. TUIs
@@ -119,7 +127,17 @@ type MpvResponse struct {
 
 This tells the unmarshal function to hold off trying to parse the `Data` field 
 until later.
- 
+
+
+## `defer`
+
+
+## Composition (struct embedding)
+
+## Custom sorting
+
+
+
 
 # Design decisions: Focus on simplicity
 
