@@ -1,7 +1,7 @@
 package main
 
 import (
-	//	"fmt"
+	"fmt"
 	//	"github.com/gdamore/tcell/v2"
 	radio "github.com/kghose/radio-go-go/internal"
 	mpv "github.com/kghose/radio-go-go/internal/mpv"
@@ -14,6 +14,14 @@ import (
 )
 
 var searchBoxWidth = 50
+
+type ListMode int
+
+const (
+	HISTORY ListMode = iota
+	SEARCH
+	FAVES
+)
 
 type App struct {
 	mpvPlayer mpv.Player
@@ -35,6 +43,28 @@ func (app *App) setStationList(stations []radio.Station) {
 		app.stationsListView.AddItem(
 			station.Details.Name, station.Details.URLResolved, 0, nil)
 	}
+	app.stationsListView.SetCurrentItem(0)
+}
+
+func (app *App) setListTo(t ListMode) {
+
+	list := []radio.Station{}
+	title := ""
+
+	switch t {
+	case HISTORY:
+		title = "History"
+		list = app.history
+	case SEARCH:
+		title = "Search"
+		list = app.searchResult
+	case FAVES:
+		title = "Faves"
+		list = radio.Favorites(app.history)
+
+	}
+	app.setStationList(list)
+	app.stationsListView.SetTitle(fmt.Sprintf("%s (%d)", title, len(list)))
 }
 
 func (app *App) searchBarDone(key tcell.Key) {
@@ -45,7 +75,7 @@ func (app *App) searchBarDone(key tcell.Key) {
 			slog.Error("Error searching for stations.")
 		}
 		app.searchResult = radio.SearchResults(stations, app.history)
-		app.setStationList(app.searchResult)
+		app.setListTo(SEARCH)
 		app.pages.SwitchToPage("Stations")
 	}
 	if key == tcell.KeyEsc {
@@ -68,13 +98,13 @@ func (app *App) favoriteThis(url string) {
 func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
 	case 'h':
-		app.setStationList(app.history)
+		app.setListTo(HISTORY)
 	case 's':
-		app.setStationList(app.searchResult)
+		app.setListTo(SEARCH)
 	case '/':
 		app.pages.ShowPage("Search")
 	case 'f':
-		app.setStationList(radio.Favorites(app.history))
+		app.setListTo(FAVES)
 	case 'F':
 		_, url := app.stationsListView.GetItemText(
 			app.stationsListView.GetCurrentItem())
@@ -88,7 +118,6 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 	}
 	return nil
 }
-
 
 func main() {
 	slogger, closeFunc := radio.SetupLoggingToFile()
@@ -126,9 +155,12 @@ func main() {
 	app.stationsListView = tview.NewList()
 	app.stationsListView.SetSelectedFunc(app.playThis)
 	app.stationsListView.SetInputCapture(app.userKeyPress)
+	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(true)
 
 	app.pages.AddPage("Stations", app.stationsListView, true, true)
 	app.pages.AddPage("Search", searchBar, true, false)
+
+	app.setListTo(HISTORY)
 
 	if err := app.ui.SetRoot(app.pages, true).Run(); err != nil {
 		panic(err)
