@@ -40,7 +40,6 @@ func (app *App) setStationList(stations []radio.Station) {
 func (app *App) searchBarDone(key tcell.Key) {
 	if key == tcell.KeyEnter {
 		keywords := app.searchBarInputField.GetText()
-		slog.Info(keywords)
 		stations, err := radio_browser.StationSearch(keywords, app.server)
 		if err != nil {
 			slog.Error("Error searching for stations.")
@@ -57,11 +56,12 @@ func (app *App) searchBarDone(key tcell.Key) {
 
 func (app *App) playThis(_ int, _ string, url string, _ rune) {
 	r := app.mpvPlayer.Play(url)
-	slog.Info(r.Error)
+	slog.Info("Play", "url", url, "mpv", r.Error)
 	app.history = radio.AddToHistory(url, app.searchResult, app.history)
 }
 
 func (app *App) favoriteThis(url string) {
+	slog.Info("Fave", "url", url)
 	app.history = radio.AddToFavorites(url, app.searchResult, app.history)
 }
 

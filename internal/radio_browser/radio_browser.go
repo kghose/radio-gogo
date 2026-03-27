@@ -43,12 +43,16 @@ func GetAvailableServers() ([]string, error) {
 			servers_set[url] = struct{}{}
 		}
 	}
+	servers := slices.Collect(maps.Keys(servers_set))
+	slog.Info("Lookup servers", "found", len(servers))
 
-	return slices.Collect(maps.Keys(servers_set)), nil
+	return servers, nil
 }
 
 func PickRandomServer(servers []string) string {
-	return servers[rand.Intn(len(servers))]
+	server := servers[rand.Intn(len(servers))]
+	slog.Info("Pick server", "url", server)
+	return server
 }
 
 type Station struct {
@@ -99,7 +103,12 @@ func StationSearch(comma_separated_keywords string, server_url string) ([]Statio
 		return stations, err
 	}
 
-	return dedupeStationList(stations), nil
+	dedupedStations := dedupeStationList(stations)
+	slog.Info(
+		"Search",
+		"keywords", comma_separated_keywords,
+		"found", len(dedupedStations))
+	return dedupedStations, nil
 }
 
 func dedupeStationList(stations []Station) []Station {
