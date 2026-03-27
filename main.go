@@ -71,7 +71,7 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		app.setStationList(app.history)
 	case 's':
 		app.setStationList(app.searchResult)
-	case 'S':
+	case '/':
 		app.pages.ShowPage("Search")
 	case 'f':
 		app.setStationList(radio.Favorites(app.history))
