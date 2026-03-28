@@ -160,6 +160,7 @@ func main() {
 	servers, err := radio_browser.GetAvailableServers()
 	if err != nil {
 		slog.Error("Could not find radio browser servers")
+		servers = []string{""}
 	}
 
 	app.server = radio_browser.PickRandomServer(servers)
