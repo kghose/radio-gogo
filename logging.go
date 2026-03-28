@@ -2,7 +2,7 @@
 Setup logging for us
 */
 
-package radio
+package main 
 
 import (
 	"log/slog"

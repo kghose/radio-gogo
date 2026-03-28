@@ -2,7 +2,7 @@
 Where to save our program data and logs
 */
 
-package radio
+package main 
 
 import (
 	"io/fs"

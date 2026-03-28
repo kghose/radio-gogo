@@ -1,16 +1,18 @@
 /*
 Largely, manage a list of stations
 */
-package radio
+package main 
 
 import (
 	"encoding/json"
 	"log/slog"
 	"os"
+
+	radio "github.com/kghose/radio-go-go/internal"
 )
 
-func LoadHistory() ([]Station, error) {
-	stations := []Station{}
+func LoadHistory() ([]radio.Station, error) {
+	stations := []radio.Station{}
 
 	fname, err := stationsFilePath()
 	if err != nil {
@@ -35,7 +37,7 @@ func LoadHistory() ([]Station, error) {
 	return stations, nil
 }
 
-func SaveHistory(stations []Station) error {
+func SaveHistory(stations []radio.Station) error {
 	fname, err := stationsFilePath()
 	if err != nil {
 		return err

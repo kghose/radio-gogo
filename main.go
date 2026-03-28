@@ -147,7 +147,7 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func main() {
-	slogger, closeFunc := radio.SetupLoggingToFile()
+	slogger, closeFunc := SetupLoggingToFile()
 	defer closeFunc()
 	slog.SetDefault(slogger)
 
@@ -163,7 +163,7 @@ func main() {
 	}
 
 	app.server = radio_browser.PickRandomServer(servers)
-	app.history, err = radio.LoadHistory()
+	app.history, err = LoadHistory()
 
 	app.searchBarInputField = tview.NewInputField()
 	app.searchBarInputField.SetFieldWidth(searchBoxWidth).
