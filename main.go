@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -34,6 +35,7 @@ type App struct {
 	ui                  *tview.Application
 	stationsListView    *tview.List
 	searchBarInputField *tview.InputField
+	nowPlayingBox       *tview.TextView
 	pages               *tview.Pages
 }
 
@@ -95,6 +97,19 @@ func (app *App) playThis(_ int, _ string, url string, _ rune) {
 	r := app.mpvPlayer.Play(url)
 	slog.Info("Play", "url", url, "mpv", r.Error)
 	app.history = radio.AddToHistory(url, app.searchResult, app.history)
+}
+
+func (app *App) updateNowPlayingBox() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		meta := app.mpvPlayer.Meta()
+		text := fmt.Sprintf(
+			"Station: %s\nSummary: %s\nGenre: %s\nTrack: %s",
+			meta.Name, meta.Description, meta.Genre, meta.Title)
+		app.ui.QueueUpdateDraw(func() { app.nowPlayingBox.SetText(text) })
+	}
 }
 
 func (app *App) favoriteThis(url string) {
@@ -164,14 +179,21 @@ func main() {
 		SetBorders(true).
 		AddItem(app.searchBarInputField, 0, 1, 1, 1, 0, 0, true)
 
+	app.nowPlayingBox = tview.NewTextView()
+	app.nowPlayingBox.
+		SetBorder(true).
+		SetTitleAlign(tview.AlignRight).
+		SetTitle("Playing")
+	go app.updateNowPlayingBox()
+
 	app.stationsListView = tview.NewList()
 	app.stationsListView.SetSelectedFunc(app.playThis)
 	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(true)
 
 	mainGrid := tview.NewGrid().
 		SetColumns(100).
-		SetRows(5, 0).
-		AddItem(tview.NewBox().SetBorder(true), 0, 0, 1, 1, 5, 80, false).
+		SetRows(6, 0).
+		AddItem(app.nowPlayingBox, 0, 0, 1, 1, 5, 80, false).
 		AddItem(app.stationsListView, 1, 0, 1, 1, 20, 80, true)
 
 	app.pages.AddPage("Stations", mainGrid, true, true)
