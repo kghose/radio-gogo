@@ -2,18 +2,17 @@ package main
 
 import (
 	"fmt"
-	//	"github.com/gdamore/tcell/v2"
+	"log/slog"
+
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
+
 	radio "github.com/kghose/radio-go-go/internal"
 	mpv "github.com/kghose/radio-go-go/internal/mpv"
 	radio_browser "github.com/kghose/radio-go-go/internal/radio_browser"
-	//	"github.com/rivo/tview"
-	"log/slog"
-	//	"time"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 )
 
-var searchBoxWidth = 50
+var searchBoxWidth = 80
 
 type ListMode int
 
@@ -28,8 +27,9 @@ type App struct {
 
 	server string
 
-	searchResult []radio.Station
-	history      []radio.Station
+	searchResult       []radio.Station
+	history            []radio.Station
+	lastSearchKeywords string
 
 	ui                  *tview.Application
 	stationsListView    *tview.List
@@ -56,7 +56,11 @@ func (app *App) setListTo(t ListMode) {
 		title = "History"
 		list = app.history
 	case SEARCH:
-		title = "Search"
+		if app.lastSearchKeywords != "" {
+			title = app.lastSearchKeywords
+		} else {
+			title = "Search"
+		}
 		list = app.searchResult
 	case FAVES:
 		title = "Faves"
@@ -65,6 +69,8 @@ func (app *App) setListTo(t ListMode) {
 	}
 	app.setStationList(list)
 	app.stationsListView.SetTitle(fmt.Sprintf("%s (%d)", title, len(list)))
+	app.pages.SwitchToPage("Stations")
+	app.ui.SetFocus(app.stationsListView)
 }
 
 func (app *App) searchBarDone(key tcell.Key) {
@@ -75,12 +81,13 @@ func (app *App) searchBarDone(key tcell.Key) {
 			slog.Error("Error searching for stations.")
 		}
 		app.searchResult = radio.SearchResults(stations, app.history)
+		app.lastSearchKeywords = keywords
 		app.setListTo(SEARCH)
-		app.pages.SwitchToPage("Stations")
 	}
 	if key == tcell.KeyEsc {
 		// Close the popup without doing anything
 		app.pages.SwitchToPage("Stations")
+		app.ui.SetFocus(app.stationsListView)
 	}
 }
 
@@ -96,6 +103,10 @@ func (app *App) favoriteThis(url string) {
 }
 
 func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
+	if app.searchBarInputField.HasFocus() {
+		return event
+	}
+
 	switch event.Rune() {
 	case 'h':
 		app.setListTo(HISTORY)
@@ -103,6 +114,7 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		app.setListTo(SEARCH)
 	case '/':
 		app.pages.ShowPage("Search")
+		app.ui.SetFocus(app.searchBarInputField)
 	case 'f':
 		app.setListTo(FAVES)
 	case 'F':
@@ -154,16 +166,22 @@ func main() {
 
 	app.stationsListView = tview.NewList()
 	app.stationsListView.SetSelectedFunc(app.playThis)
-	app.stationsListView.SetInputCapture(app.userKeyPress)
 	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(true)
 
-	app.pages.AddPage("Stations", app.stationsListView, true, true)
+	mainGrid := tview.NewGrid().
+		SetColumns(100).
+		SetRows(5, 0).
+		AddItem(tview.NewBox().SetBorder(true), 0, 0, 1, 1, 5, 80, false).
+		AddItem(app.stationsListView, 1, 0, 1, 1, 20, 80, true)
+
+	app.pages.AddPage("Stations", mainGrid, true, true)
 	app.pages.AddPage("Search", searchBar, true, false)
+
+	app.ui.SetInputCapture(app.userKeyPress)
 
 	app.setListTo(HISTORY)
 
 	if err := app.ui.SetRoot(app.pages, true).Run(); err != nil {
 		panic(err)
 	}
-
 }
