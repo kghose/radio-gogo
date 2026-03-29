@@ -97,6 +97,7 @@ func (app *App) playThis(_ int, _ string, url string, _ rune) {
 	r := app.mpvPlayer.Play(url)
 	slog.Info("Play", "url", url, "mpv", r.Error)
 	app.history = radio.AddToHistory(url, app.searchResult, app.history)
+	SaveHistory(app.history)
 }
 
 func (app *App) updateNowPlayingBox() {
@@ -115,6 +116,7 @@ func (app *App) updateNowPlayingBox() {
 func (app *App) favoriteThis(url string) {
 	slog.Info("Fave", "url", url)
 	app.history = radio.AddToFavorites(url, app.searchResult, app.history)
+	SaveHistory(app.history)
 }
 
 func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
