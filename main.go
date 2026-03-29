@@ -23,6 +23,37 @@ const (
 	FAVES
 )
 
+type ListPos struct {
+	topRow      int
+	selectedRow int
+}
+
+type StationsListState struct {
+	listPos  []ListPos
+	listMode ListMode
+}
+
+func (ls *StationsListState) saveState(lv *tview.List) {
+	offset, _ := lv.GetOffset()
+	selRow := lv.GetCurrentItem()
+	ls.listPos[ls.listMode] = ListPos{offset, selRow}
+}
+
+func (ls *StationsListState) loadState(newMode ListMode, lv *tview.List) {
+	// First check if state is still suitable for the list
+	if lv.GetItemCount() < ls.listPos[newMode].topRow {
+		ls.listPos[newMode].topRow = lv.GetItemCount()
+	}
+	if lv.GetItemCount() < ls.listPos[newMode].selectedRow {
+		ls.listPos[newMode].selectedRow = lv.GetItemCount()
+	}
+
+	lv.SetOffset(ls.listPos[newMode].topRow, 0)
+	lv.SetCurrentItem(ls.listPos[newMode].selectedRow)
+
+	ls.listMode = newMode
+}
+
 type App struct {
 	mpvPlayer mpv.Player
 
@@ -34,6 +65,7 @@ type App struct {
 
 	ui                  *tview.Application
 	stationsListView    *tview.List
+	stationsListState   StationsListState
 	searchBarInputField *tview.InputField
 	nowPlayingBox       *tview.TextView
 	pages               *tview.Pages
@@ -45,6 +77,15 @@ func (app *App) setStationList(stations []radio.Station) {
 		app.stationsListView.AddItem(
 			station.Details.Name, station.Details.URLResolved, 0, nil)
 	}
+	app.stationsListView.SetCurrentItem(0)
+}
+
+func (app *App) resetSearchCursor() {
+	app.stationsListState.listPos[SEARCH] = ListPos{}
+	if app.stationsListState.listMode != SEARCH {
+		return
+	}
+	app.stationsListView.SetOffset(0,0)
 	app.stationsListView.SetCurrentItem(0)
 }
 
@@ -67,9 +108,11 @@ func (app *App) setListTo(t ListMode) {
 	case FAVES:
 		title = "Faves"
 		list = radio.Favorites(app.history)
-
 	}
+
+	app.stationsListState.saveState(app.stationsListView)
 	app.setStationList(list)
+	app.stationsListState.loadState(t, app.stationsListView)
 	app.stationsListView.SetTitle(fmt.Sprintf("%s (%d)", title, len(list)))
 	app.pages.SwitchToPage("Stations")
 	app.ui.SetFocus(app.stationsListView)
@@ -84,6 +127,7 @@ func (app *App) searchBarDone(key tcell.Key) {
 		}
 		app.searchResult = radio.SearchResults(stations, app.history)
 		app.lastSearchKeywords = keywords
+		app.resetSearchCursor()
 		app.setListTo(SEARCH)
 	}
 	if key == tcell.KeyEsc {
@@ -192,6 +236,7 @@ func main() {
 	app.stationsListView = tview.NewList()
 	app.stationsListView.SetSelectedFunc(app.playThis)
 	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(true)
+	app.stationsListState.listPos = []ListPos{{}, {}, {}}
 
 	mainGrid := tview.NewGrid().
 		SetColumns(100).
