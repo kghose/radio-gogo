@@ -14,6 +14,7 @@ import (
 const (
 	userDataDirName = "radio-gogo"
 	stationsFile    = "stations.json"
+	songHistoryFile = "songs.txt"
 	logFile         = "log.txt"
 )
 
@@ -37,6 +38,14 @@ func stationsFilePath() (string, error) {
 	return path.Join(
 		userDataDirPath,
 		stationsFile,
+	), err
+}
+
+func songHistoryFilePath() (string, error) {
+	userDataDirPath, err := getUserDataDirPath()
+	return path.Join(
+		userDataDirPath,
+		songHistoryFile,
 	), err
 }
 

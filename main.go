@@ -85,7 +85,7 @@ func (app *App) resetSearchCursor() {
 	if app.stationsListState.listMode != SEARCH {
 		return
 	}
-	app.stationsListView.SetOffset(0,0)
+	app.stationsListView.SetOffset(0, 0)
 	app.stationsListView.SetCurrentItem(0)
 }
 
@@ -148,12 +148,15 @@ func (app *App) updateNowPlayingBox() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
+	shs := NewSongHistorySaver()
+
 	for range ticker.C {
 		meta := app.mpvPlayer.Meta()
 		text := fmt.Sprintf(
 			"Station: %s\nSummary: %s\nGenre: %s\nTrack: %s",
 			meta.Name, meta.Description, meta.Genre, meta.Title)
 		app.ui.QueueUpdateDraw(func() { app.nowPlayingBox.SetText(text) })
+		shs.save(meta.Title)
 	}
 }
 
