@@ -71,11 +71,19 @@ type App struct {
 	pages               *tview.Pages
 }
 
+func stationViewTitleString(station *radio.Station) string {
+	title := station.Details.Name
+	if station.Favorite {
+		title = "(*)" + title
+	}
+	return title
+}
+
 func (app *App) setStationList(stations []radio.Station) {
 	app.stationsListView.Clear()
 	for _, station := range stations {
 		app.stationsListView.AddItem(
-			station.Details.Name, station.Details.URLResolved, 0, nil)
+			stationViewTitleString(&station), station.Details.URLResolved, 0, nil)
 	}
 	app.stationsListView.SetCurrentItem(0)
 }
