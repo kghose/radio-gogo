@@ -232,10 +232,10 @@ func main() {
 	app.pages = tview.NewPages()
 
 	searchBar := tview.NewGrid().
-		SetColumns(1, searchBoxWidth, 1).
-		SetRows(1).
+		SetColumns(0, searchBoxWidth, 0).
+		SetRows(6, 1).
 		SetBorders(true).
-		AddItem(app.searchBarInputField, 0, 1, 1, 1, 0, 0, true)
+		AddItem(app.searchBarInputField, 1, 1, 1, 1, 0, 0, true)
 
 	app.nowPlayingBox = tview.NewTextView()
 	app.nowPlayingBox.
