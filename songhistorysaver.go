@@ -30,6 +30,9 @@ func (shs *SongHistorySaver) save(song string) {
 	if shs.fp == nil {
 		return
 	}
+	if song == "" {
+		return
+	}
 	if shs.lastSong != song {
 		shs.lastSong = song
 		if _, err := shs.fp.WriteString(shs.lastSong + "\n"); err != nil {
