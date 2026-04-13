@@ -186,6 +186,7 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		app.setListTo(SEARCH)
 	case '/':
 		app.pages.ShowPage("Search")
+		app.searchBarInputField.SetText("")
 		app.ui.SetFocus(app.searchBarInputField)
 	case 'f':
 		app.setListTo(FAVES)
