@@ -225,8 +225,11 @@ func main() {
 	app.history, err = LoadHistory()
 
 	app.searchBarInputField = tview.NewInputField()
-	app.searchBarInputField.SetFieldWidth(searchBoxWidth).
-		SetDoneFunc(app.searchBarDone)
+	app.searchBarInputField.
+		SetFieldWidth(searchBoxWidth).
+		SetDoneFunc(app.searchBarDone).
+		SetFieldBackgroundColor(tcell.GetColor("white")).
+		SetFieldTextColor(tcell.GetColor("black"))
 
 	app.ui = tview.NewApplication()
 
