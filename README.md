@@ -1,6 +1,6 @@
 # Radio Go Go
 
-![](radio-gogo.apng)
+![](screen-shot.png)
 
     All we heard is radio ga ga
     Radio goo goo
