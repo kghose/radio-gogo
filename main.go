@@ -196,6 +196,7 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		_, url := app.stationsListView.GetItemText(
 			app.stationsListView.GetCurrentItem())
 		app.favoriteThis(url)
+		app.setListTo(app.stationsListState.listMode) // To refresh the heart marker
 	case 'p':
 		app.mpvPlayer.TogglePause()
 	case 'q':
