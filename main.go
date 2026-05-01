@@ -74,7 +74,7 @@ type App struct {
 func stationViewTitleString(station *radio.Station) string {
 	title := station.Details.Name
 	if station.Favorite {
-		title = "(*)" + title
+		title = "❤️" + title
 	}
 	return title
 }
@@ -243,20 +243,38 @@ func main() {
 
 	app.nowPlayingBox = tview.NewTextView()
 	app.nowPlayingBox.
-		SetBorder(true).
-		SetTitleAlign(tview.AlignRight).
-		SetTitle("Playing")
+		SetBorder(false).
+		SetTitleAlign(tview.AlignRight)
 	go app.updateNowPlayingBox()
 
 	app.stationsListView = tview.NewList()
 	app.stationsListView.SetSelectedFunc(app.playThis)
-	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(true)
+	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(false)
+	app.stationsListView.SetDrawFunc(
+		// Custom border
+		func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
+			// Line
+			for cx := x; cx < x+width; cx++ {
+				tview.Print(
+					screen,
+					string(tview.BoxDrawingsLightHorizontal),
+					cx, y, 1, tview.AlignCenter, tcell.ColorWhite)
+			}
+			// Title
+			tview.Print(
+				screen, " "+app.stationsListView.GetTitle(),
+				x, y, width, tview.AlignRight, tcell.ColorYellow)
+
+			// Return the inner rectangle where content should be drawn
+			// (We subtract 1 from the top to account for the title line)
+			return x, y + 1, width, height - 1
+		})
 	app.stationsListState.listPos = []ListPos{{}, {}, {}}
 
 	mainGrid := tview.NewGrid().
 		SetColumns(100).
-		SetRows(6, 0).
-		AddItem(app.nowPlayingBox, 0, 0, 1, 1, 5, 80, false).
+		SetRows(4, 0).
+		AddItem(app.nowPlayingBox, 0, 0, 1, 1, 3, 80, false).
 		AddItem(app.stationsListView, 1, 0, 1, 1, 20, 80, true)
 
 	app.pages.AddPage("Stations", mainGrid, true, true)
