@@ -248,27 +248,32 @@ func main() {
 	go app.updateNowPlayingBox()
 
 	app.stationsListView = tview.NewList()
-	app.stationsListView.SetSelectedFunc(app.playThis)
-	app.stationsListView.SetTitleAlign(tview.AlignRight).SetBorder(false)
-	app.stationsListView.SetDrawFunc(
-		// Custom border
-		func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
-			// Line
-			for cx := x; cx < x+width; cx++ {
+	app.stationsListView.
+		SetSelectedFunc(app.playThis).
+		SetTitleAlign(tview.AlignRight).
+		SetBorder(false).
+		SetDrawFunc(
+			// Custom border
+			func(
+				screen tcell.Screen,
+				x, y, width, height int) (int, int, int, int) {
+				// Line
+				for cx := x; cx < x+width; cx++ {
+					tview.Print(
+						screen,
+						string(tview.BoxDrawingsLightHorizontal),
+						cx, y, 1, tview.AlignCenter, 
+						tcell.ColorWhite)
+				}
+				// Title
 				tview.Print(
-					screen,
-					string(tview.BoxDrawingsLightHorizontal),
-					cx, y, 1, tview.AlignCenter, tcell.ColorWhite)
-			}
-			// Title
-			tview.Print(
-				screen, " "+app.stationsListView.GetTitle(),
-				x, y, width, tview.AlignRight, tcell.ColorYellow)
+					screen, " "+app.stationsListView.GetTitle(),
+					x, y, width, tview.AlignRight, tcell.ColorYellow)
 
-			// Return the inner rectangle where content should be drawn
-			// (We subtract 1 from the top to account for the title line)
-			return x, y + 1, width, height - 1
-		})
+				// Return the inner rectangle where content should be drawn
+				// (We subtract 1 from the top to account for the title line)
+				return x, y + 1, width, height - 1
+			})
 	app.stationsListState.listPos = []ListPos{{}, {}, {}}
 
 	mainGrid := tview.NewGrid().
