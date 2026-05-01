@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -14,6 +15,7 @@ import (
 )
 
 var searchBoxWidth = 80
+const STATION_NAME_JUNK_CHARS = ".-+*# "
 
 type ListMode int
 
@@ -72,11 +74,11 @@ type App struct {
 }
 
 func stationViewTitleString(station *radio.Station) string {
-	title := station.Details.Name
+	name := strings.TrimLeft(station.Details.Name, STATION_NAME_JUNK_CHARS)
 	if station.Favorite {
-		title = "❤️" + title
+		name = "❤️" + name
 	}
-	return title
+	return fmt.Sprintf("%-*.*s", 30, 30, name) + " [blue]" + station.Details.URLResolved
 }
 
 func (app *App) setStationList(stations []radio.Station) {
@@ -249,6 +251,7 @@ func main() {
 
 	app.stationsListView = tview.NewList()
 	app.stationsListView.
+		ShowSecondaryText(false).
 		SetSelectedFunc(app.playThis).
 		SetTitleAlign(tview.AlignRight).
 		SetBorder(false).
@@ -262,7 +265,7 @@ func main() {
 					tview.Print(
 						screen,
 						string(tview.BoxDrawingsLightHorizontal),
-						cx, y, 1, tview.AlignCenter, 
+						cx, y, 1, tview.AlignCenter,
 						tcell.ColorWhite)
 				}
 				// Title
