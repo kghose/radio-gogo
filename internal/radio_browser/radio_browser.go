@@ -71,6 +71,16 @@ type Station struct {
 	Longitude   float64 `json:"geo_long"`
 }
 
+
+func sanitizeStrings(stations []Station) {
+	for _, station := range stations {
+		station.Name = fmt.Sprintf("%q", station.Name)
+		station.URLResolved = fmt.Sprintf("%q", station.URLResolved) // Maybe redundant?
+		// TODO: Other strings that we may print
+	}
+}
+
+
 func StationSearch(comma_separated_keywords string, server_url string) ([]Station, error) {
 
 	stations := []Station{}
@@ -104,6 +114,7 @@ func StationSearch(comma_separated_keywords string, server_url string) ([]Statio
 	}
 
 	dedupedStations := dedupeStationList(stations)
+	sanitizeStrings(dedupedStations)
 	slog.Info(
 		"Search",
 		"keywords", comma_separated_keywords,
