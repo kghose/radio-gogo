@@ -134,12 +134,12 @@ func AddToFavorites(url string, searchResult []Station, history []Station) []Sta
 	return history
 }
 
-type StationOp int
+type StationOp string
 
 const (
-	PLAYED StationOp = iota
-	FAVE
-	UNFAVE
+	PLAYED StationOp = "Played"
+	FAVE   StationOp = "Faved"
+	UNFAVE StationOp = "Unfaved"
 )
 
 func UpdateHist(station Station, history *[]Station, op StationOp) {
