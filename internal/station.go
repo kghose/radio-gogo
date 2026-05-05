@@ -99,6 +99,7 @@ func Favorites(stations []Station) []Station {
 	return favoriteStations
 }
 
+// TODO: refactor this into AddToHistory
 // The url to favorite can come from the history list or the search list
 // Where ever it comes from, we have to ensure it is in the history list
 // with the Favorite flag set and return the refreshed history list
@@ -131,4 +132,42 @@ func AddToFavorites(url string, searchResult []Station, history []Station) []Sta
 	history = slices.Insert(history, 0, newStation)
 	sortList(history)
 	return history
+}
+
+type StationOp int
+
+const (
+	PLAYED StationOp = iota
+	FAVE
+	UNFAVE
+)
+
+func UpdateHist(station Station, history *[]Station, op StationOp) {
+	idx := slices.IndexFunc(
+		*history,
+		func(s Station) bool {
+			return s.Details.URLResolved == station.Details.URLResolved
+		})
+	if idx == -1 {
+		// Unless we are unfaving
+		if op == UNFAVE {
+			return
+		}
+		// we add the entry to the history first, then
+		*history = append(*history, station)
+		sortList(*history)
+		// retry what we were doing
+		UpdateHist(station, history, op)
+		return
+	}
+
+	switch op {
+	case PLAYED:
+		(*history)[idx].LastPlayed = time.Now()
+	case FAVE:
+		(*history)[idx].Favorite = true
+	case UNFAVE:
+		(*history)[idx].Favorite = false
+	}
+
 }
