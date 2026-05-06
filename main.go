@@ -226,7 +226,6 @@ func (app *App) unfaveThis() {
 	app.updateLists()
 }
 
-
 func (app *App) showSearchBar() {
 	app.stationsPane.widget.ShowPage(SEARCH_BAR)
 	app.stationsPane.searchBarInputField.SetText("")
@@ -269,7 +268,7 @@ func (app *App) updateNowPlayingBox() {
 
 	shs := NewSongHistorySaver()
 
-	for range ticker.C {
+	for ; ; <-ticker.C {
 		meta := app.mpvPlayer.Meta()
 		text := fmt.Sprintf(
 			"Station: %s\nSummary: %s\nGenre: %s\nTrack: %s",
