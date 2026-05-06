@@ -7,8 +7,12 @@ import (
 	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
 	"slices"
 	"sort"
+	"strings"
 	"time"
+	"unicode"
 )
+
+const STATION_NAME_JUNK_CHARS = ".-+*# "
 
 // A radio station we may have played and may have marked as favorite.
 type Station struct {
@@ -17,23 +21,45 @@ type Station struct {
 	Favorite   bool      // In our favorites list?
 }
 
-func sortAlpha(stations []Station) {
+func SortAlpha(stations []Station) {
 	sort.SliceStable(stations, func(i, j int) bool {
 		return stations[i].Details.Name < stations[j].Details.Name
 	})
 }
 
-func sortLastPlayed(stations []Station) {
+func SortLastPlayed(stations []Station) {
 	sort.SliceStable(stations, func(i, j int) bool {
 		return stations[i].LastPlayed.Compare(stations[j].LastPlayed) > 0
 	})
 }
 
-func sortByFave(stations []Station) {
+func SortByFave(stations []Station) {
 	sort.SliceStable(stations, func(i, j int) bool {
 		return stations[i].Favorite
 	})
 }
+
+func sanitize(s *string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return -1
+	}, *s)
+}
+
+func sanitizeStation(s *radioBrowser.Station) {
+	s.Name = strings.TrimLeft(sanitize(&s.Name), STATION_NAME_JUNK_CHARS)
+	s.URLResolved = sanitize(&s.URLResolved)
+	s.URL = sanitize(&s.URL)
+}
+
+func SanitizeStationList(sl []Station) {
+	for i := range sl {
+		sanitizeStation(&sl[i].Details)
+	}
+}
+
 
 // Given a list of stations retrieved from a Radio Browser search and one loaded from
 // our listening history, tag stations by last played time, and if they are favorites
@@ -51,6 +77,7 @@ func SearchResults(
 			// TODO: Take care of station metadata changes
 			searchResult = append(searchResult, sta)
 		} else {
+			sanitizeStation(&station)
 			searchResult = append(searchResult, Station{station, time.Time{}, false})
 		}
 	}
