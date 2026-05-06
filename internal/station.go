@@ -40,41 +40,6 @@ func SearchResults(
 	return searchResult
 }
 
-// The url we just played can come from the history list or the search list
-// Even if it comes from the history list, if we find it in the search results
-// we update the history, assuming that the search results have the most upto date
-// metadata about the station
-func AddToHistory(url string, searchResult []Station, history []Station) []Station {
-	stationDetails := radioBrowser.Station{}
-	for i := range searchResult {
-		if searchResult[i].Details.URLResolved == url {
-			stationDetails = searchResult[i].Details
-			break
-		}
-	}
-	for i := range history {
-		if history[i].Details.URLResolved == url {
-			if stationDetails.URLResolved == url {
-				// The station is in the search and history
-				// update the details and the last played time
-				history[i].Details = stationDetails
-				history[i].LastPlayed = time.Now()
-				return history
-			} else {
-				// It's just in the history
-				history[i].LastPlayed = time.Now()
-				return history
-			}
-		}
-	}
-
-	// The station is not in the history
-	newStation := Station{stationDetails, time.Now(), false}
-	history = slices.Insert(history, 0, newStation)
-	sortList(history)
-	return history
-}
-
 func sortList(stations []Station) {
 	sort.SliceStable(stations, func(i, j int) bool {
 		if stations[i].Favorite == stations[j].Favorite {
@@ -97,41 +62,6 @@ func Favorites(stations []Station) []Station {
 		}
 	}
 	return favoriteStations
-}
-
-// TODO: refactor this into AddToHistory
-// The url to favorite can come from the history list or the search list
-// Where ever it comes from, we have to ensure it is in the history list
-// with the Favorite flag set and return the refreshed history list
-func AddToFavorites(url string, searchResult []Station, history []Station) []Station {
-	stationDetails := radioBrowser.Station{}
-	for i := range searchResult {
-		if searchResult[i].Details.URLResolved == url {
-			stationDetails = searchResult[i].Details
-			break
-		}
-	}
-	for i := range history {
-		if history[i].Details.URLResolved == url {
-			if stationDetails.URLResolved == url {
-				// The station is in the search and history
-				// update the details and the last played time
-				history[i].Details = stationDetails
-				history[i].Favorite = true
-				return history
-			} else {
-				// It's just in the history
-				history[i].Favorite = true
-				return history
-			}
-		}
-	}
-
-	// The station is not in the history
-	newStation := Station{stationDetails, time.Time{}, true}
-	history = slices.Insert(history, 0, newStation)
-	sortList(history)
-	return history
 }
 
 type StationOp string
