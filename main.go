@@ -220,6 +220,13 @@ func (app *App) faveThis() {
 	app.updateLists()
 }
 
+func (app *App) unfaveThis() {
+	app.updateHist(app.currentStationIdx(), radio.UNFAVE)
+	app.saveHist()
+	app.updateLists()
+}
+
+
 func (app *App) showSearchBar() {
 	app.stationsPane.widget.ShowPage(SEARCH_BAR)
 	app.stationsPane.searchBarInputField.SetText("")
@@ -288,6 +295,8 @@ func (app *App) userKeyPress(event *tcell.EventKey) *tcell.EventKey {
 		app.stationsPane.switchTo(FAVES)
 	case '=':
 		app.faveThis()
+	case '-':
+		app.unfaveThis()
 	case 'p':
 		app.mpvPlayer.TogglePause()
 	case 'q':
