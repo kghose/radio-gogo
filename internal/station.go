@@ -17,6 +17,24 @@ type Station struct {
 	Favorite   bool      // In our favorites list?
 }
 
+func sortAlpha(stations []Station) {
+	sort.SliceStable(stations, func(i, j int) bool {
+		return stations[i].Details.Name < stations[j].Details.Name
+	})
+}
+
+func sortLastPlayed(stations []Station) {
+	sort.SliceStable(stations, func(i, j int) bool {
+		return stations[i].LastPlayed.Compare(stations[j].LastPlayed) > 0
+	})
+}
+
+func sortByFave(stations []Station) {
+	sort.SliceStable(stations, func(i, j int) bool {
+		return stations[i].Favorite
+	})
+}
+
 // Given a list of stations retrieved from a Radio Browser search and one loaded from
 // our listening history, tag stations by last played time, and if they are favorites
 // and return the list sorted by favorites, last played and then alphabetically
@@ -36,7 +54,7 @@ func SearchResults(
 			searchResult = append(searchResult, Station{station, time.Time{}, false})
 		}
 	}
-	sortList(searchResult)
+	sortAlpha(searchResult)
 	return searchResult
 }
 
