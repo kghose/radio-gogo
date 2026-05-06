@@ -36,7 +36,7 @@ type StationsList struct {
 	stations []radio.Station
 }
 
-func stationString(station *radio.Station) string {
+func itemTitle(station *radio.Station) string {
 	name := strings.TrimLeft(station.Details.Name, STATION_NAME_JUNK_CHARS)
 	if station.Favorite {
 		name = "❤️" + name
@@ -56,7 +56,7 @@ func (sv *StationsList) set(stations []radio.Station, title string, reset_view b
 	sv.widget.Clear()
 	for _, station := range stations {
 		sv.widget.AddItem(
-			stationString(&station), station.Details.URLResolved, 0, nil)
+			itemTitle(&station), station.Details.URLResolved, 0, nil)
 	}
 	sv.widget.SetCurrentItem(selRow)
 	sv.widget.SetOffset(offRow, 0)
@@ -139,16 +139,15 @@ func (sp *StationsPane) switchTo(listName ListName) {
 
 type App struct {
 	mpvPlayer mpv.Player
-
-	server string
-
-	searchResult       []radio.Station
-	history            []radio.Station
-	lastSearchKeywords string
+	server    string
 
 	ui            *tview.Application
 	stationsPane  StationsPane
 	nowPlayingBox *tview.TextView
+}
+
+func (app *App) getHist() *[]radio.Station {
+	return &app.stationsPane.lists[HISTORY].stations
 }
 
 func (app *App) loadHist() {
@@ -156,12 +155,8 @@ func (app *App) loadHist() {
 	// TODO: Handle errors
 	if err != nil {
 	}
-	app.stationsPane.lists[HISTORY].stations = stations
+	*app.getHist() = stations
 	app.updateLists()
-}
-
-func (app *App) getHist() *[]radio.Station {
-	return &app.stationsPane.lists[HISTORY].stations
 }
 
 func (app *App) saveHist() {
@@ -332,8 +327,7 @@ func main() {
 
 	app.nowPlayingBox = tview.NewTextView()
 	app.nowPlayingBox.
-		SetBorder(false).
-		SetTitleAlign(tview.AlignRight)
+		SetBorder(false)
 	go app.updateNowPlayingBox()
 
 	mainGrid := tview.NewGrid().
