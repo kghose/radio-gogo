@@ -120,7 +120,7 @@ func (sp *StationsPane) setup(
 	sp.lists = make(map[ListName]*StationsList)
 	for _, page := range []ListName{HISTORY, SEARCH_RESULTS, FAVES} {
 		tv := tview.NewList()
-		sp.lists[page] = &StationsList{tv, "", []radio.Station{}}
+		sp.lists[page] = &StationsList{tv, string(page), []radio.Station{}}
 		tv.
 			ShowSecondaryText(false).
 			SetSelectedFunc(playThis).
