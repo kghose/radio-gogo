@@ -1,12 +1,13 @@
 /*
-Manage lists of stations
+Manage collections of stations.
+
+We create one set of Station objects and share them across the multiple lists we
+manage.
 */
 package radio
 
 import (
 	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
-	"slices"
-	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -21,24 +22,6 @@ type Station struct {
 	Favorite   bool      // In our favorites list?
 }
 
-func SortAlpha(stations []Station) {
-	sort.SliceStable(stations, func(i, j int) bool {
-		return stations[i].Details.Name < stations[j].Details.Name
-	})
-}
-
-func SortLastPlayed(stations []Station) {
-	sort.SliceStable(stations, func(i, j int) bool {
-		return stations[i].LastPlayed.Compare(stations[j].LastPlayed) > 0
-	})
-}
-
-func SortByFave(stations []Station) {
-	sort.SliceStable(stations, func(i, j int) bool {
-		return stations[i].Favorite
-	})
-}
-
 func sanitize(s *string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsPrint(r) {
@@ -48,65 +31,50 @@ func sanitize(s *string) string {
 	}, *s)
 }
 
-func sanitizeStation(s *radioBrowser.Station) {
-	s.Name = strings.TrimLeft(sanitize(&s.Name), STATION_NAME_JUNK_CHARS)
-	s.URLResolved = sanitize(&s.URLResolved)
-	s.URL = sanitize(&s.URL)
+func sanitizeStation(s *Station) {
+	s.Details.Name = strings.TrimLeft(sanitize(&s.Details.Name), STATION_NAME_JUNK_CHARS)
+	s.Details.URLResolved = sanitize(&s.Details.URLResolved)
+	s.Details.URL = sanitize(&s.Details.URL)
 }
 
-func SanitizeStationList(sl []Station) {
+func MakeStationIndex(sl []*Station) map[string]*Station {
+	index := make(map[string]*Station)
 	for i := range sl {
-		sanitizeStation(&sl[i].Details)
+		index[sl[i].Details.URLResolved] = sl[i]
+		sanitizeStation(sl[i])
 	}
+	return index
 }
 
 
-// Given a list of stations retrieved from a Radio Browser search and one loaded from
-// our listening history, tag stations by last played time, and if they are favorites
-// and return the list sorted by favorites, last played and then alphabetically
-func SearchResults(
-	stationsFromBrowser []radioBrowser.Station,
-	stationsFromHistory []Station) []Station {
-	historyMap := make(map[string]Station)
-	for _, station := range stationsFromHistory {
-		historyMap[station.Details.URLResolved] = station
+func History(index map[string]*Station) map[string]*Station {
+	history := make(map[string]*Station)
+	for k, v := range index {
+		if !v.LastPlayed.IsZero() || v.Favorite {
+			history[k] = v
+		}
 	}
-	searchResult := []Station{}
-	for _, station := range stationsFromBrowser {
-		if sta, ok := historyMap[station.URLResolved]; ok {
+	return history
+}
+
+
+func MakeNewIndexFromSearch(
+	sl []radioBrowser.Station,
+	oldIndex map[string]*Station,
+) (map[string]*Station, []string) {
+	index := History(oldIndex) 
+	urls := []string{}
+	for i := range sl {
+		url := sl[i].URLResolved
+		if _, ok := index[url]; ok {
 			// TODO: Take care of station metadata changes
-			searchResult = append(searchResult, sta)
 		} else {
-			sanitizeStation(&station)
-			searchResult = append(searchResult, Station{station, time.Time{}, false})
+			index[url] = &Station{sl[i], time.Time{}, false}
+			sanitizeStation(index[url])
 		}
+		urls = append(urls, url)
 	}
-	sortAlpha(searchResult)
-	return searchResult
-}
-
-func sortList(stations []Station) {
-	sort.SliceStable(stations, func(i, j int) bool {
-		if stations[i].Favorite == stations[j].Favorite {
-			cmp := stations[i].LastPlayed.Compare(stations[j].LastPlayed)
-			if cmp == 0 {
-				return stations[i].Details.Name < stations[j].Details.Name
-			}
-			return cmp > 0
-		} else {
-			return stations[i].Favorite
-		}
-	})
-}
-
-func Favorites(stations []Station) []Station {
-	favoriteStations := []Station{}
-	for i := range stations {
-		if stations[i].Favorite {
-			favoriteStations = append(favoriteStations, stations[i])
-		}
-	}
-	return favoriteStations
+	return index, urls
 }
 
 type StationOp string
@@ -117,32 +85,14 @@ const (
 	UNFAVE StationOp = "Unfaved"
 )
 
-func UpdateHist(station Station, history *[]Station, op StationOp) {
-	idx := slices.IndexFunc(
-		*history,
-		func(s Station) bool {
-			return s.Details.URLResolved == station.Details.URLResolved
-		})
-	if idx == -1 {
-		// Unless we are unfaving
-		if op == UNFAVE {
-			return
-		}
-		// we add the entry to the history first, then
-		*history = append(*history, station)
-		sortList(*history)
-		// retry what we were doing
-		UpdateHist(station, history, op)
-		return
-	}
-
+func UpdateIndex(url string, index map[string]*Station, op StationOp) {
 	switch op {
 	case PLAYED:
-		(*history)[idx].LastPlayed = time.Now()
+		index[url].LastPlayed = time.Now()
 	case FAVE:
-		(*history)[idx].Favorite = true
+		index[url].Favorite = true
 	case UNFAVE:
-		(*history)[idx].Favorite = false
+		index[url].Favorite = false
 	}
-
 }
+
