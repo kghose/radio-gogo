@@ -39,18 +39,6 @@ func sanitizeStation(s *Station) {
 	s.Details.URL = sanitize(&s.Details.URL)
 }
 
-/*
-// TODO: Can probably deprecate
-func MakeStationIndex(sl []*Station) map[string]*Station {
-	index := make(map[string]*Station)
-	for i := range sl {
-		index[sl[i].Details.URLResolved] = sl[i]
-		sanitizeStation(sl[i])
-	}
-	return index
-}
-*/
-
 func History(index map[string]*Station) map[string]*Station {
 	history := make(map[string]*Station)
 	for k, v := range index {
