@@ -50,7 +50,7 @@ func SaveHistory(stations map[string]*radio.Station) error {
 	}
 	defer f.Close()
 
-	dataStr, err := json.MarshalIndent(stations, "", " ")
+	dataStr, err := json.MarshalIndent(radio.History(stations), "", " ")
 	if err != nil {
 		slog.Error("Error formatting station history", "Error", err)
 		return err
