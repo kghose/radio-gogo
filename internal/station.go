@@ -39,6 +39,7 @@ func sanitizeStation(s *Station) {
 	s.Details.URL = sanitize(&s.Details.URL)
 }
 
+/*
 // TODO: Can probably deprecate
 func MakeStationIndex(sl []*Station) map[string]*Station {
 	index := make(map[string]*Station)
@@ -48,6 +49,7 @@ func MakeStationIndex(sl []*Station) map[string]*Station {
 	}
 	return index
 }
+*/
 
 func History(index map[string]*Station) map[string]*Station {
 	history := make(map[string]*Station)
@@ -96,7 +98,7 @@ func SortLastPlayed(index map[string]*Station) []*Station {
 		l = append(l, v)
 	}
 	slices.SortFunc(l, func(a, b *Station) int {
-		return a.LastPlayed.Compare(b.LastPlayed)
+		return b.LastPlayed.Compare(a.LastPlayed)
 	})
 	return l
 }

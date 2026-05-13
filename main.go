@@ -228,7 +228,7 @@ func main() {
 
 	ui := radio.UI{}
 	ui.Setup(
-		func(r rune) {
+		func(r rune) bool {
 			switch r {
 			case 'h':
 				ui.ShowHist()
@@ -250,7 +250,10 @@ func main() {
 				mpvPlayer.TogglePause()
 			case 'q':
 				ui.Stop()
+			default:
+				return false
 			}
+			return true
 		},
 		func(kw string) {
 			keywords = kw
@@ -261,13 +264,14 @@ func main() {
 			stationIndex, searchUrls =
 				radio.MakeNewIndexFromSearch(stations, stationIndex)
 			ui.RefreshLists(stationIndex, searchUrls, keywords)
+			ui.ShowSearch()
 		},
 		func(idx int, _ string, url string, _ rune) {
 			r := mpvPlayer.Play(url)
 			slog.Info("Play", "url", url, "mpv", r.Error)
 			radio.UpdateIndex(url, stationIndex, radio.PLAYED)
+			ui.RefreshLists(stationIndex, searchUrls, keywords)
 			SaveHistory(stationIndex)
-			// ui should refresh?
 		},
 	)
 

@@ -132,6 +132,7 @@ func (ui *UI) ShowSearchBar() {
 
 func (ui *UI) HideSearchBar() {
 	ui.pages.HidePage(string(searchBarPopup))
+	ui.app.SetFocus(ui.stationsView.pages)
 }
 
 func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
@@ -188,9 +189,8 @@ func (ui *UI) RefreshLists(index map[string]*Station, urls []string, keywords st
 	ui.SetSearch(SortAlpha(Search(index, urls)), keywords)
 }
 
-
 func (ui *UI) Setup(
-	keyFunc func(r rune),
+	keyFunc func(r rune) bool,
 	searchFunc func(string),
 	playFunc func(int, string, string, rune)) {
 
@@ -207,12 +207,10 @@ func (ui *UI) Setup(
 	ui.searchBar = tview.NewInputField().
 		SetFieldWidth(searchBarWidth).
 		SetDoneFunc(func(k tcell.Key) {
-			switch k {
-			case tcell.KeyEnter:
+			if k == tcell.KeyEnter {
 				searchFunc(ui.searchBar.GetText())
-			case tcell.KeyEsc:
-				ui.HideSearchBar()
 			}
+			ui.HideSearchBar()
 		}).
 		SetFieldBackgroundColor(tcell.GetColor("white")).
 		SetFieldTextColor(tcell.GetColor("black"))
@@ -232,8 +230,11 @@ func (ui *UI) Setup(
 		if ui.searchBar.HasFocus() {
 			return e
 		}
-		keyFunc(e.Rune())
-		return nil
+		if !keyFunc(e.Rune()) {
+			return e
+		} else {
+			return nil
+		}
 	})
 	ui.app.SetRoot(ui.pages, true)
 }
