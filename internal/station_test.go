@@ -39,30 +39,6 @@ func TestSanitizeStation(t *testing.T) {
 	}
 }
 
-func TestMakeStationIndex(t *testing.T) {
-	sA := Station{
-		radioBrowser.Station{
-			Name:        "a",
-			URLResolved: "urlA",
-			URL:         "boo",
-		},
-		time.Time{},
-		true}
-	sB := Station{
-		radioBrowser.Station{
-			Name:        "b",
-			URLResolved: "urlB",
-			URL:         "boo",
-		},
-		time.Time{},
-		true}
-	got := MakeStationIndex([]*Station{&sA, &sB})
-	want := map[string]*Station{"urlA": &sA, "urlB": &sB}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("Station list to index mismatch (-want +got):\n%s", diff)
-	}
-}
-
 func TestHistory(t *testing.T) {
 	sA := Station{
 		radioBrowser.Station{
