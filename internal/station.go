@@ -8,6 +8,8 @@ package radio
 
 import (
 	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
+
+	"slices"
 	"strings"
 	"time"
 	"unicode"
@@ -37,6 +39,7 @@ func sanitizeStation(s *Station) {
 	s.Details.URL = sanitize(&s.Details.URL)
 }
 
+// TODO: Can probably deprecate
 func MakeStationIndex(sl []*Station) map[string]*Station {
 	index := make(map[string]*Station)
 	for i := range sl {
@@ -45,7 +48,6 @@ func MakeStationIndex(sl []*Station) map[string]*Station {
 	}
 	return index
 }
-
 
 func History(index map[string]*Station) map[string]*Station {
 	history := make(map[string]*Station)
@@ -57,12 +59,53 @@ func History(index map[string]*Station) map[string]*Station {
 	return history
 }
 
+func Faves(index map[string]*Station) map[string]*Station {
+	faves := make(map[string]*Station)
+	for k, v := range index {
+		if v.Favorite {
+			faves[k] = v
+		}
+	}
+	return faves
+}
+
+func Search(index map[string]*Station, urls []string) map[string]*Station {
+	s := make(map[string]*Station)
+	for _, url := range urls {
+		s[url] = index[url]
+	}
+	return s
+}
+
+func SortAlpha(index map[string]*Station) []*Station {
+	l := []*Station{}
+	for _, v := range index {
+		l = append(l, v)
+	}
+	slices.SortFunc(l, func(a, b *Station) int {
+		return strings.Compare(
+			strings.ToLower(a.Details.Name),
+			strings.ToLower(b.Details.Name))
+	})
+	return l
+}
+
+func SortLastPlayed(index map[string]*Station) []*Station {
+	l := []*Station{}
+	for _, v := range index {
+		l = append(l, v)
+	}
+	slices.SortFunc(l, func(a, b *Station) int {
+		return a.LastPlayed.Compare(b.LastPlayed)
+	})
+	return l
+}
 
 func MakeNewIndexFromSearch(
 	sl []radioBrowser.Station,
 	oldIndex map[string]*Station,
 ) (map[string]*Station, []string) {
-	index := History(oldIndex) 
+	index := History(oldIndex)
 	urls := []string{}
 	for i := range sl {
 		url := sl[i].URLResolved
@@ -95,4 +138,3 @@ func UpdateIndex(url string, index map[string]*Station, op StationOp) {
 		index[url].Favorite = false
 	}
 }
-
