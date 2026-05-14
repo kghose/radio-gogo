@@ -183,6 +183,11 @@ func (ui *UI) SetSearch(stations []*Station, keywords string) {
 		searchPage, keywords, false)
 }
 
+func (ui *UI) ResetSearchScroll() {
+	ui.stationsView.lists[searchPage].SetCurrentItem(0)
+	ui.stationsView.lists[searchPage].SetOffset(0, 0)
+}
+
 func (ui *UI) RefreshLists(index map[string]*Station, urls []string, keywords string) {
 	ui.SetHist(SortLastPlayed(History(index)))
 	ui.SetFaves(SortAlpha(Faves(index)))

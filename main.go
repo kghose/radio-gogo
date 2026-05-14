@@ -77,6 +77,7 @@ func main() {
 		stationIndex, searchUrls =
 			radio.MakeNewIndexFromSearch(stations, stationIndex)
 		ui.RefreshLists(stationIndex, searchUrls, keywords)
+		ui.ResetSearchScroll()
 		ui.ShowSearch()
 	}
 
