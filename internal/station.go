@@ -15,7 +15,7 @@ import (
 	"unicode"
 )
 
-const STATION_NAME_JUNK_CHARS = ".-+*# "
+const STATION_NAME_JUNK_CHARS = "_.-+*# "
 
 // A radio station we may have played and may have marked as favorite.
 type Station struct {
