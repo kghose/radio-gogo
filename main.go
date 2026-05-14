@@ -36,55 +36,57 @@ func main() {
 	keywords := "Search"
 
 	ui := radio.UI{}
-	ui.Setup(
-		func(r rune) bool {
-			switch r {
-			case 'h':
-				ui.ShowHist()
-			case 's':
-				ui.ShowSearch()
-			case '/':
-				ui.ShowSearchBar()
-			case 'f':
-				ui.ShowFaves()
-			case '=':
-				radio.UpdateIndex(ui.SelectedURL(), stationIndex, radio.FAVE)
-				ui.RefreshLists(stationIndex, searchUrls, keywords)
-				SaveHistory(stationIndex)
-			case '-':
-				radio.UpdateIndex(ui.SelectedURL(), stationIndex, radio.UNFAVE)
-				ui.RefreshLists(stationIndex, searchUrls, keywords)
-				SaveHistory(stationIndex)
-			case 'p':
-				mpvPlayer.TogglePause()
-			case 'q':
-				ui.Stop()
-			default:
-				return false
-			}
-			return true
-		},
-		func(kw string) {
-			keywords = kw
-			stations, err := radio_browser.StationSearch(keywords, server)
-			if err != nil {
-				slog.Error("Error searching for stations.")
-			}
-			stationIndex, searchUrls =
-				radio.MakeNewIndexFromSearch(stations, stationIndex)
-			ui.RefreshLists(stationIndex, searchUrls, keywords)
-			ui.ShowSearch()
-		},
-		func(idx int, _ string, url string, _ rune) {
-			r := mpvPlayer.Play(url)
-			slog.Info("Play", "url", url, "mpv", r.Error)
-			radio.UpdateIndex(url, stationIndex, radio.PLAYED)
-			ui.RefreshLists(stationIndex, searchUrls, keywords)
-			SaveHistory(stationIndex)
-		},
-	)
 
-	go func() {
+	stnFunc := func(op radio.StationOp) {
+		radio.UpdateIndex(ui.SelectedURL(), stationIndex, op)
+		ui.RefreshLists(stationIndex, searchUrls, keywords)
+		SaveHistory(stationIndex)
+	}
+
+	// Return true if the key press is consumed (acted upon)
+	keyFunc := func(r rune) bool {
+		switch r {
+		case 'h':
+			ui.ShowHist()
+		case 's':
+			ui.ShowSearch()
+		case '/':
+			ui.ShowSearchBar()
+		case 'f':
+			ui.ShowFaves()
+		case '=':
+			stnFunc(radio.FAVE)
+		case '-':
+			stnFunc(radio.UNFAVE)
+		case 'p':
+			mpvPlayer.TogglePause()
+		case 'q':
+			ui.Stop()
+		default:
+			return false
+		}
+		return true
+	}
+
+	searchFunc := func(kw string) {
+		keywords = kw
+		stations, err := radio_browser.StationSearch(keywords, server)
+		if err != nil {
+			slog.Error("Error searching for stations.")
+		}
+		stationIndex, searchUrls =
+			radio.MakeNewIndexFromSearch(stations, stationIndex)
+		ui.RefreshLists(stationIndex, searchUrls, keywords)
+		ui.ShowSearch()
+	}
+
+	playFunc := func(idx int, _ string, url string, _ rune) {
+		r := mpvPlayer.Play(url)
+		slog.Info("Play", "url", url, "mpv", r.Error)
+		stnFunc(radio.PLAYED)
+	}
+
+	periodicInfoRefreshFunc := func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
@@ -93,7 +95,15 @@ func main() {
 			ui.SetNowPlaying(meta)
 			shs.save(meta.Title)
 		}
-	}()
+	}
+
+	ui.Setup(
+		keyFunc,
+		searchFunc,
+		playFunc,
+	)
+
+	go periodicInfoRefreshFunc()
 
 	ui.RefreshLists(stationIndex, searchUrls, keywords)
 	ui.ShowHist()
