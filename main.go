@@ -43,29 +43,15 @@ func main() {
 		SaveHistory(stationIndex)
 	}
 
-	// Return true if the key press is consumed (acted upon)
-	keyFunc := func(r rune) bool {
-		switch r {
-		case 'h':
-			ui.ShowHist()
-		case 's':
-			ui.ShowSearch()
-		case '/':
-			ui.ShowSearchBar()
-		case 'f':
-			ui.ShowFaves()
-		case '=':
-			stnFunc(radio.FAVE)
-		case '-':
-			stnFunc(radio.UNFAVE)
-		case 'p':
-			mpvPlayer.TogglePause()
-		case 'q':
-			ui.Stop()
-		default:
-			return false
-		}
-		return true
+	keyMap := map[rune]radio.KeyFunc{
+		'h': {Help: "Show history pane", Fn: ui.ShowHist},
+		's': {Help: "Show search pane", Fn: ui.ShowSearch},
+		'/': {Help: "Search", Fn: ui.ShowSearchBar},
+		'f': {Help: "Show faves pane", Fn: ui.ShowFaves},
+		'=': {Help: "Fave station", Fn: func() { stnFunc(radio.FAVE) }},
+		'-': {Help: "Unfave station", Fn: func() { stnFunc(radio.UNFAVE) }},
+		'p': {Help: "Pause", Fn: func() { mpvPlayer.TogglePause() }},
+		'q': {Help: "Quit", Fn: ui.Stop},
 	}
 
 	searchFunc := func(kw string) {
@@ -99,7 +85,7 @@ func main() {
 	}
 
 	ui.Setup(
-		keyFunc,
+		keyMap,
 		searchFunc,
 		playFunc,
 	)

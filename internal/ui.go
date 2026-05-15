@@ -194,8 +194,13 @@ func (ui *UI) RefreshLists(index map[string]*Station, urls []string, keywords st
 	ui.SetSearch(SortAlpha(Search(index, urls)), keywords)
 }
 
+type KeyFunc struct {
+	Help string
+	Fn  func()
+}
+
 func (ui *UI) Setup(
-	keyFunc func(r rune) bool,
+	keyMap map[rune]KeyFunc,
 	searchFunc func(string),
 	playFunc func(int, string, string, rune)) {
 
@@ -235,10 +240,11 @@ func (ui *UI) Setup(
 		if ui.searchBar.HasFocus() {
 			return e
 		}
-		if !keyFunc(e.Rune()) {
-			return e
+		if keyPress, ok := keyMap[e.Rune()]; ok {
+			keyPress.Fn()
+			return nil 
 		} else {
-			return nil
+			return e
 		}
 	})
 	ui.app.SetRoot(ui.pages, true)
