@@ -79,7 +79,7 @@ func itemTitle(station *Station) string {
 	if station.Favorite {
 		name = "❤️" + name
 	}
-	return fmt.Sprintf("%-*.*s [blue] %s", 30, 30, name, station.Details.URLResolved)
+	return fmt.Sprintf("%-*.*s [blue]%s", 30, 30, name, station.Details.URLResolved)
 }
 
 func (sv *StationsView) set(stations []*Station, pageName PageName, title string, reset_view bool) {
@@ -136,8 +136,11 @@ func (ui *UI) HideSearchBar() {
 
 func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
 	text := fmt.Sprintf(
-		"Station: %s\nSummary: %s\nGenre: %s\nTrack: %s",
-		meta.Name, meta.Description, meta.Genre, meta.Title)
+		`Station: %s [red]%s[white]
+Summary: %s
+Genre: %s
+Track: %s`,
+		meta.Name, meta.Url, meta.Description, meta.Genre, meta.Title)
 	ui.app.QueueUpdateDraw(func() { ui.infoPane.SetText(text) })
 }
 
@@ -195,7 +198,7 @@ func (ui *UI) RefreshLists(index map[string]*Station, urls []string, keywords st
 
 type KeyFunc struct {
 	Help string
-	Fn  func()
+	Fn   func()
 }
 
 func (ui *UI) Setup(
@@ -205,6 +208,8 @@ func (ui *UI) Setup(
 
 	ui.infoPane = tview.NewTextView()
 	ui.infoPane.SetBorder(false)
+	ui.infoPane.SetDynamicColors(true)
+
 	ui.stationsView.setup(playFunc)
 
 	ui.mainPageGrid = tview.NewGrid().
@@ -241,7 +246,7 @@ func (ui *UI) Setup(
 		}
 		if keyPress, ok := keyMap[e.Rune()]; ok {
 			keyPress.Fn()
-			return nil 
+			return nil
 		} else {
 			return e
 		}
