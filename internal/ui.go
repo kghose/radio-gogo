@@ -5,7 +5,6 @@ package radio
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -76,7 +75,7 @@ func (sv *StationsView) setup(playThis func(int, string, string, rune)) {
 }
 
 func itemTitle(station *Station) string {
-	name := strings.TrimLeft(station.Details.Name, STATION_NAME_JUNK_CHARS)
+	name := station.Details.Name
 	if station.Favorite {
 		name = "❤️" + name
 	}
