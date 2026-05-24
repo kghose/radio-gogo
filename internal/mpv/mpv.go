@@ -30,6 +30,8 @@ type MpvMetadata struct {
 	Description string `json:"icy-description"`
 	Genre       string `json:"icy-genre"`
 	Title       string `json:"icy-title"`
+	Playing     bool
+	URL         string
 }
 
 type Player struct {
@@ -59,7 +61,7 @@ func (p *Player) Play(url string) MpvResponse {
 func (p *Player) TogglePause() MpvResponse {
 	p.command([]string{"cycle", "pause"}) // Most reliable way to pause/unpause
 	r := p.command([]string{"get_property", "pause"})
-	p.playing = string(r.Data) == "true"
+	p.playing = string(r.Data) == "false"
 	return r
 }
 
@@ -67,6 +69,8 @@ func (p *Player) Meta() MpvMetadata {
 	response := p.command([]string{"get_property", "metadata"})
 	meta := MpvMetadata{}
 	json.Unmarshal(response.Data, &meta)
+	meta.Playing = p.playing
+	meta.URL = p.url
 	return meta
 }
 
