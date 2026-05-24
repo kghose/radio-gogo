@@ -9,6 +9,16 @@ import (
 	radio_browser "github.com/kghose/radio-go-go/internal/radio_browser"
 )
 
+type StationOp int
+
+const (
+	playStation StationOp = iota
+	faveStation
+	unfaveStation
+	favePlayingStation
+	unfavePlayingStation
+)
+
 func main() {
 	slogger, closeFunc := SetupLoggingToFile()
 	defer closeFunc()
@@ -34,11 +44,34 @@ func main() {
 	}
 	searchUrls := []string{}
 	keywords := "Search"
+	playingStationUrl := ""
 
 	ui := radio.UI{}
 
-	stnFunc := func(op radio.StationOp) {
-		radio.UpdateIndex(ui.SelectedURL(), stationIndex, op)
+	stnFunc := func(op StationOp) {
+		url := ui.SelectedURL()
+		var indexOp radio.StationOp
+		switch op {
+		case favePlayingStation:
+			indexOp = radio.FAVE
+			url = playingStationUrl
+		case unfavePlayingStation:
+			indexOp = radio.UNFAVE
+			url = playingStationUrl
+		case playStation:
+			indexOp = radio.PLAYED
+		case faveStation:
+			indexOp = radio.FAVE
+		case unfaveStation:
+			indexOp = radio.UNFAVE
+		}
+		if url == "" {
+			// Can only happen if we try to fave/unfave
+			// current station and nothing has been played.
+			return
+		}
+
+		radio.UpdateIndex(url, stationIndex, indexOp)
 		ui.RefreshLists(stationIndex, searchUrls, keywords)
 		SaveHistory(stationIndex)
 	}
@@ -48,8 +81,10 @@ func main() {
 		's': {Help: "Show search pane", Fn: ui.ShowSearch},
 		'/': {Help: "Search", Fn: ui.ShowSearchBar},
 		'f': {Help: "Show faves pane", Fn: ui.ShowFaves},
-		'=': {Help: "Fave station", Fn: func() { stnFunc(radio.FAVE) }},
-		'-': {Help: "Unfave station", Fn: func() { stnFunc(radio.UNFAVE) }},
+		'=': {Help: "Fave station", Fn: func() { stnFunc(faveStation) }},
+		'-': {Help: "Unfave station", Fn: func() { stnFunc(unfaveStation) }},
+		'+': {Help: "Fave playing station", Fn: func() { stnFunc(favePlayingStation) }},
+		'_': {Help: "Unfave playing station", Fn: func() { stnFunc(unfavePlayingStation) }},
 		'p': {Help: "Pause", Fn: func() { mpvPlayer.TogglePause() }},
 		'q': {Help: "Quit", Fn: ui.Stop},
 	}
@@ -68,9 +103,10 @@ func main() {
 	}
 
 	playFunc := func(idx int, _ string, url string, _ rune) {
+		playingStationUrl = url
 		r := mpvPlayer.Play(url)
 		slog.Info("Play", "url", url, "mpv", r.Error)
-		stnFunc(radio.PLAYED)
+		stnFunc(playStation)
 	}
 
 	periodicInfoRefreshFunc := func() {
