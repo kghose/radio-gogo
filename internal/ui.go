@@ -135,12 +135,19 @@ func (ui *UI) HideSearchBar() {
 }
 
 func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
+	paused := ""
+	if !meta.Playing {
+		paused = "[yellow](PAUSED)[-] "
+	}
 	text := fmt.Sprintf(
-		`Station: %s
+		`Station: %s%s
 Summary: %s
 Genre: %s
 Track: %s`,
-		meta.Name, meta.Description, meta.Genre, meta.Title)
+		paused, meta.Name,
+		meta.Description,
+		meta.Genre,
+		meta.Title)
 	ui.app.QueueUpdateDraw(func() { ui.infoPane.SetText(text) })
 }
 
