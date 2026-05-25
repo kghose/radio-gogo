@@ -134,20 +134,21 @@ func (ui *UI) HideSearchBar() {
 	ui.app.SetFocus(ui.stationsView.pages)
 }
 
+var playStateString = map[bool]string{
+	true:  "[green]\u25b6[-]",
+	false: "[red]\u23f8[-]",
+}
+
 func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
-	paused := ""
-	if !meta.Playing {
-		paused = "[yellow](PAUSED)[-] "
-	}
 	text := fmt.Sprintf(
-		`Station: %s%s
+		`[yellow]Station: %s
 Summary: %s
 Genre: %s
-Track: %s`,
-		paused, meta.Name,
+Track: %s %s`,
+		meta.Name,
 		meta.Description,
 		meta.Genre,
-		meta.Title)
+		playStateString[meta.Playing], meta.Title)
 	ui.app.QueueUpdateDraw(func() { ui.infoPane.SetText(text) })
 }
 
