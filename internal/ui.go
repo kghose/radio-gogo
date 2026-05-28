@@ -75,11 +75,13 @@ func (sv *StationsView) setup(playThis func(int, string, string, rune)) {
 }
 
 func itemTitle(station *Station) string {
-	name := station.Details.Name
+	heart := ""
 	if station.Favorite {
-		name = "❤️" + name
+		heart = "[red]\u2764[-]"
 	}
-	return fmt.Sprintf("%-*.*s [blue]%s", 30, 30, name, station.Details.URLResolved)
+	return fmt.Sprintf(
+		"%-1s %-30.30s [blue]%s",
+		heart, station.Details.Name, station.Details.URLResolved)
 }
 
 func (sv *StationsView) set(stations []*Station, pageName PageName, title string, reset_view bool) {
