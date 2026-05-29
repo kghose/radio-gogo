@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 	}
 	searchUrls := []string{}
-	keywords := "Search"
+	searchString := "Search"
 	playingStationUrl := ""
 
 	ui := radio.UI{}
@@ -72,7 +72,7 @@ func main() {
 		}
 
 		radio.UpdateIndex(url, stationIndex, indexOp)
-		ui.RefreshLists(stationIndex, searchUrls, keywords)
+		ui.RefreshLists(stationIndex, searchUrls, searchString)
 		SaveHistory(stationIndex)
 	}
 
@@ -89,15 +89,16 @@ func main() {
 		'q': {Help: "Quit", Fn: ui.Stop},
 	}
 
-	searchFunc := func(kw string) {
-		keywords = kw
-		stations, err := radio_browser.StationSearch(keywords, server)
+	searchFunc := func(searchStr string) {
+		searchString = searchStr
+		sq := radio.ParseSearchString(searchStr)
+		stations, err := radio_browser.StationSearch(sq, server)
 		if err != nil {
 			slog.Error("Error searching for stations.")
 		}
 		stationIndex, searchUrls =
 			radio.MakeNewIndexFromSearch(stations, stationIndex)
-		ui.RefreshLists(stationIndex, searchUrls, keywords)
+		ui.RefreshLists(stationIndex, searchUrls, searchString)
 		ui.ResetSearchScroll()
 		ui.ShowSearch()
 	}
@@ -128,7 +129,7 @@ func main() {
 
 	go periodicInfoRefreshFunc()
 
-	ui.RefreshLists(stationIndex, searchUrls, keywords)
+	ui.RefreshLists(stationIndex, searchUrls, searchString)
 	ui.ShowHist()
 	if err := ui.Run(); err != nil {
 		panic(err)

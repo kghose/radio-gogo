@@ -71,7 +71,6 @@ type Station struct {
 	Longitude   float64 `json:"geo_long"`
 }
 
-
 func sanitizeStrings(stations []Station) {
 	for _, station := range stations {
 		station.Name = fmt.Sprintf("%q", station.Name)
@@ -80,8 +79,13 @@ func sanitizeStrings(stations []Station) {
 	}
 }
 
+type SearchQuery struct {
+	Name    string
+	Country string
+	TagList []string
+}
 
-func StationSearch(comma_separated_keywords string, server_url string) ([]Station, error) {
+func StationSearch(query SearchQuery, server_url string) ([]Station, error) {
 
 	stations := []Station{}
 
@@ -96,7 +100,17 @@ func StationSearch(comma_separated_keywords string, server_url string) ([]Statio
 		"User-Agent",
 		fmt.Sprintf("%s/%s", appString, appVersion))
 	q := req.URL.Query()
-	q.Add("tagList", comma_separated_keywords)
+
+	tl := strings.Join(query.TagList, ",")
+	if query.Name != "" {
+		q.Add("name", query.Name)
+	}
+	if query.Country != "" {
+		q.Add("country", query.Country)
+	}
+	if len(query.TagList) > 0 {
+		q.Add("tagList", tl)
+	}
 	q.Add("hidebroken", strconv.FormatBool(true))
 	q.Add("limit", searchLimit)
 
@@ -117,7 +131,10 @@ func StationSearch(comma_separated_keywords string, server_url string) ([]Statio
 	sanitizeStrings(dedupedStations)
 	slog.Info(
 		"Search",
-		"keywords", comma_separated_keywords,
+		"name", query.Name,
+		"country", query.Country,
+		"tags", tl,
+		"query", req.URL.RawQuery,
 		"found", len(dedupedStations))
 	return dedupedStations, nil
 }
