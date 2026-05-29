@@ -143,10 +143,10 @@ var playStateString = map[bool]string{
 
 func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
 	text := fmt.Sprintf(
-		`[yellow]Station: %s
-Summary: %s
-Genre: %s
-Track: %s %s`,
+		`[red]Station: %s
+[white]Summary: %s
+[blue]Genre: %s
+[yellow]Track: %s %s`,
 		meta.Name,
 		meta.Description,
 		meta.Genre,
