@@ -19,20 +19,7 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
 1. Install `mpv`
 1. Clone this repository
 1. Start the program using `go run .`
-
-## Manual
-1. On startup you will see the history list. It is ordered with most recent
-   played first, then alphabetically by station name.
-1. Use the arrow keys to navigate the station list.
-1. Press <Enter> to start playing the station.
-1. Press "h" to see history list
-1. Press "s" to see the search results
-1. Press "f" to show just the favorites in current list
-1. Press "S" to reveal the search bar. Type in comma separated keywords +
-   <Enter> to search.
-1. Press "=" to add station to favorites
-1. Press "-" to remove station from favorites
-1. Press "-" to remove station from current list if it isn't a favorite
+1. Type "?" for key map and search syntax
 
 
 ## Errors
@@ -42,9 +29,21 @@ whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
    Just hit ENTER again to search
 
 ## User data
-History and favorites are stored in JSON files under `$XDG_DATA_HOME` if it is 
-set or `.local/share/radio-gogo/` 
+Played and favorite stations are stored as `stations.json` under
+`$XDG_DATA_HOME` if it is set or `.local/share/radio-gogo/`
 
+Played songs (metadata as reported by the station stream) are saved in
+`songs.txt` in the same directory.
+
+The log is saved in log.txt (but may be moved to `$` in a future version)
+
+# Code
+
+## Run tests
+
+```
+go test -v ./...
+```
 
 ## Data structures and algorithms
 

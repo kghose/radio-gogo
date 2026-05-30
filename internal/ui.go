@@ -5,6 +5,8 @@ package radio
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -110,6 +112,7 @@ type ViewName string
 const (
 	mainView       ViewName = "Main"
 	searchBarPopup ViewName = "Search Popup"
+	helpPopup      ViewName = "Help Popup"
 )
 
 type UI struct {
@@ -133,6 +136,15 @@ func (ui *UI) ShowSearchBar() {
 
 func (ui *UI) HideSearchBar() {
 	ui.pages.HidePage(string(searchBarPopup))
+	ui.app.SetFocus(ui.stationsView.pages)
+}
+
+func (ui *UI) ShowHelp() {
+	ui.pages.ShowPage(string(helpPopup))
+}
+
+func (ui *UI) HideHelp() {
+	ui.pages.HidePage(string(helpPopup))
 	ui.app.SetFocus(ui.stationsView.pages)
 }
 
@@ -211,6 +223,18 @@ type KeyFunc struct {
 	Fn   func()
 }
 
+func makeHelpText(keyMap map[rune]KeyFunc) string {
+	text := "\n\n[yellow]Keys[-]\n\n"
+	for _, k := range slices.Sorted(maps.Keys(keyMap)) {
+		text = text +
+			fmt.Sprintf(
+				"[white]%s [red]: [green]%s\n",
+				string(k), keyMap[k].Help)
+	}
+	text = text + searchHelp
+	return text
+}
+
 func (ui *UI) Setup(
 	keyMap map[rune]KeyFunc,
 	searchFunc func(string),
@@ -245,9 +269,21 @@ func (ui *UI) Setup(
 		SetBorders(true).
 		AddItem(ui.searchBar, 1, 1, 1, 1, 0, 0, true)
 
+	helpText := tview.NewTextView().
+		SetSize(0, 80).
+		SetDynamicColors(true).
+		SetRegions(true).
+		SetDoneFunc(func(_ tcell.Key) {
+			ui.HideHelp()
+		}).
+		SetLabel("Help").
+		SetText(makeHelpText(keyMap))
+	helpText.SetBorder(true)
+
 	ui.pages = tview.NewPages()
 	ui.pages.AddPage(string(mainView), ui.mainPageGrid, true, true)
 	ui.pages.AddPage(string(searchBarPopup), ui.searchBarGrid, true, false)
+	ui.pages.AddPage(string(helpPopup), helpText, true, false)
 
 	ui.app = tview.NewApplication()
 	ui.app.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {

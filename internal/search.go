@@ -7,6 +7,20 @@ import (
 	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
 )
 
+const searchHelp = `
+[yellow]Search[-]
+
+A plain string does a tag search.
+e.g. [yellow]classic rock[-] searches for "classic rock"
+
+[yellow]n:[-] searches by name (case insensitive).
+[yellow]c:[-] searches by country (case sensitive).
+[yellow]t:[-] searches by tag. Tags can be repeated.
+
+e.g. [yellow]n:bbc c:United Kingdom t:pop t:jazz[-]
+finds [white]BBC Radio 6 music[-] for us.
+`
+
 var re = regexp.MustCompile(`((^|\s)[n|c|t]:)`)
 
 func ParseSearchString(searchStr string) radioBrowser.SearchQuery {
