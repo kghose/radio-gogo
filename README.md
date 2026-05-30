@@ -10,7 +10,7 @@
 Terminal based radio player that uses the [Radio Browser][radiobrowser] API to
 search for internet radio stations and [`mpv`][mpv] to play the streams. I was
 inspired by [Tera][tera] and I use this project as an excuse to learn
-`[golang]`.
+[Golang].
 
 [mpv]: https://mpv.io
 [radiobrowser]: https://www.radio-browser.info
