@@ -18,7 +18,7 @@ e.g. [yellow]classic rock[-] searches for "classic rock"
 [yellow]t:[-] searches by tag. Tags can be repeated.
 
 e.g. [yellow]n:bbc c:United Kingdom t:pop t:jazz[-]
-finds [white]BBC Radio 6 music[-] for us.
+finds [blue]BBC Radio 6 music[-] for us.
 `
 
 var re = regexp.MustCompile(`((^|\s)[n|c|t]:)`)
