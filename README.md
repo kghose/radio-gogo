@@ -7,13 +7,15 @@
 
     - Queen
 
-Simple terminal based radio player that uses [`mpv`][mpv] to play radio streams
-whose urls are retrieved from [Radio Browser][radiobrowser]. It is inspired by
-[Tera][tera] and I used it as an excuse to learn `golang`.
+Terminal based radio player that uses the [Radio Browser][radiobrowser] API to
+search for internet radio stations and [`mpv`][mpv] to play the streams. I was
+inspired by [Tera][tera] and I use this project as an excuse to learn
+`[golang]`.
 
 [mpv]: https://mpv.io
 [radiobrowser]: https://www.radio-browser.info
 [tera]: https://github.com/shinokada/tera
+[golang]: https://go.dev
 
 ## Install
 1. Install `mpv`
