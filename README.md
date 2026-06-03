@@ -137,6 +137,10 @@ until later.
 
 ## Custom sorting
 
+## Iterators (Python like yield)
+
+[file](internal/songlog.go)
+
 
 
 
