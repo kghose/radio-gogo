@@ -116,14 +116,10 @@ const (
 )
 
 type UI struct {
-	app   *tview.Application
-	pages *tview.Pages
-
-	mainPageGrid *tview.Grid
-	infoPane     *tview.TextView
-
-	searchBarGrid *tview.Grid
-	searchBar     *tview.InputField
+	app       *tview.Application
+	pages     *tview.Pages
+	infoPane  *tview.TextView
+	searchBar *tview.InputField
 
 	stationsView StationsView
 }
@@ -246,7 +242,7 @@ func (ui *UI) Setup(
 
 	ui.stationsView.setup(playFunc)
 
-	ui.mainPageGrid = tview.NewGrid().
+	mainPageGrid := tview.NewGrid().
 		SetColumns(100).
 		SetRows(4, 0).
 		AddItem(ui.infoPane, 0, 0, 1, 1, 3, 80, false).
@@ -263,7 +259,7 @@ func (ui *UI) Setup(
 		SetFieldBackgroundColor(tcell.GetColor("white")).
 		SetFieldTextColor(tcell.GetColor("black"))
 
-	ui.searchBarGrid = tview.NewGrid().
+	searchBarGrid := tview.NewGrid().
 		SetColumns(0, searchBarWidth, 0).
 		SetRows(2, 1).
 		SetBorders(true).
@@ -281,8 +277,8 @@ func (ui *UI) Setup(
 	helpText.SetBorder(true)
 
 	ui.pages = tview.NewPages()
-	ui.pages.AddPage(string(mainView), ui.mainPageGrid, true, true)
-	ui.pages.AddPage(string(searchBarPopup), ui.searchBarGrid, true, false)
+	ui.pages.AddPage(string(mainView), mainPageGrid, true, true)
+	ui.pages.AddPage(string(searchBarPopup), searchBarGrid, true, false)
 	ui.pages.AddPage(string(helpPopup), helpText, true, false)
 
 	ui.app = tview.NewApplication()
