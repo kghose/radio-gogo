@@ -36,7 +36,7 @@ func main() {
 
 	server := radio_browser.PickRandomServer(servers)
 
-	shs := NewSongHistorySaver()
+	songlog := radio.SongLog{}
 
 	stationIndex, err := LoadHistory()
 	// TODO: Handle errors
@@ -85,6 +85,7 @@ func main() {
 		'-': {Help: "Unfave station", Fn: func() { stnFunc(unfaveStation) }},
 		'+': {Help: "Fave playing station", Fn: func() { stnFunc(favePlayingStation) }},
 		'_': {Help: "Unfave playing station", Fn: func() { stnFunc(unfavePlayingStation) }},
+		'.': {Help: "Show played songs", Fn: ui.ShowPlayedsongs},
 		'?': {Help: "Show help", Fn: ui.ShowHelp},
 		'p': {Help: "Pause", Fn: func() { mpvPlayer.TogglePause() }},
 		'q': {Help: "Quit", Fn: ui.Stop},
@@ -118,7 +119,9 @@ func main() {
 		for ; ; <-ticker.C {
 			meta := mpvPlayer.Meta()
 			ui.SetNowPlaying(meta)
-			shs.save(meta.Title)
+			if songlog.Add(meta.Title) {
+				ui.RefreshPlayedsongs(songlog.Songs())
+			}
 		}
 	}
 
