@@ -14,13 +14,21 @@ type SongLog struct {
 	idx   int
 }
 
-func (sl *SongLog) Add(song string) {
+func (sl *SongLog) Add(song string) bool {
+	iold := sl.idx - 1
+	if iold < 0 {
+		iold = songlogBufsize - 1
+	}
+	if song == sl.songs[iold] {
+		return false
+	}
+
 	sl.songs[sl.idx] = song
 	sl.idx++
 	if sl.idx == songlogBufsize {
 		sl.idx = 0
 	}
-
+	return true
 }
 
 func (sl *SongLog) Songs() iter.Seq[string] {
