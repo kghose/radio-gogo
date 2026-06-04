@@ -5,13 +5,15 @@ package radio
 
 import (
 	"fmt"
+	"iter"
 	"maps"
 	"slices"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	mpv "github.com/kghose/radio-go-go/internal/mpv"
+	"github.com/kghose/radio-go-go/internal/mpv"
 )
 
 const searchBarWidth = 80
@@ -110,16 +112,18 @@ func (sv *StationsView) set(stations []*Station, pageName PageName, title string
 type ViewName string
 
 const (
-	mainView       ViewName = "Main"
-	searchBarPopup ViewName = "Search Popup"
-	helpPopup      ViewName = "Help Popup"
+	mainView        ViewName = "Main"
+	searchBarPopup  ViewName = "Search Popup"
+	helpPopup       ViewName = "Help Popup"
+	playedsongsView ViewName = "Song List"
 )
 
 type UI struct {
-	app       *tview.Application
-	pages     *tview.Pages
-	infoPane  *tview.TextView
-	searchBar *tview.InputField
+	app         *tview.Application
+	pages       *tview.Pages
+	infoPane    *tview.TextView
+	searchBar   *tview.InputField
+	playedsongs *tview.TextView
 
 	stationsView StationsView
 }
@@ -142,6 +146,21 @@ func (ui *UI) ShowHelp() {
 func (ui *UI) HideHelp() {
 	ui.pages.HidePage(string(helpPopup))
 	ui.app.SetFocus(ui.stationsView.pages)
+}
+
+func (ui *UI) ShowPlayedsongs() {
+	ui.pages.ShowPage(string(playedsongsView))
+}
+
+func (ui *UI) HidePlayedsongs() {
+	ui.pages.HidePage(string(playedsongsView))
+	ui.app.SetFocus(ui.stationsView.pages)
+}
+
+func (ui *UI) RefreshPlayedsongs(songs iter.Seq[string]) {
+	ui.app.QueueUpdateDraw(func() {
+		ui.playedsongs.SetText(strings.Join(slices.Collect(songs), "\n"))
+	})
 }
 
 var playStateString = map[bool]string{
@@ -276,10 +295,23 @@ func (ui *UI) Setup(
 		SetText(makeHelpText(keyMap))
 	helpText.SetBorder(true)
 
+	ui.playedsongs = tview.NewTextView().
+		SetSize(0, 80).
+		SetDynamicColors(true).
+		SetDoneFunc(func(_ tcell.Key) {
+			ui.HidePlayedsongs()
+		})
+	ui.playedsongs.SetBorder(true)
+	playedsongsGrid := tview.NewGrid().
+		SetColumns(100).
+		SetRows(4, 0).
+		AddItem(ui.playedsongs, 1, 0, 1, 1, 20, 80, true)
+
 	ui.pages = tview.NewPages()
 	ui.pages.AddPage(string(mainView), mainPageGrid, true, true)
 	ui.pages.AddPage(string(searchBarPopup), searchBarGrid, true, false)
 	ui.pages.AddPage(string(helpPopup), helpText, true, false)
+	ui.pages.AddPage(string(playedsongsView), playedsongsGrid, true, false)
 
 	ui.app = tview.NewApplication()
 	ui.app.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
