@@ -53,29 +53,6 @@ func (sv *StationsView) setup(playThis func(int, string, string, rune)) {
 		sv.pages.AddPage(string(page), l, true, false)
 	}
 
-	sv.pages.SetDrawFunc(
-		// Custom border
-		func(
-			screen tcell.Screen,
-			x, y, width, height int) (int, int, int, int) {
-			// Line
-			for cx := x; cx < x+width; cx++ {
-				tview.Print(
-					screen,
-					string(tview.BoxDrawingsLightHorizontal),
-					cx, y, 1, tview.AlignCenter,
-					tcell.ColorWhite)
-			}
-			// Title
-			tview.Print(
-				screen, " "+sv.title[sv.currentPage()],
-				x, y, width, tview.AlignRight, tcell.ColorYellow)
-
-			// Return the inner rectangle where content should be drawn
-			// (We subtract 1 from the top to account for the title line)
-			return x, y + 1, width, height - 1
-		})
-
 }
 
 func itemTitle(station *Station) string {
@@ -115,13 +92,15 @@ const (
 	mainView        ViewName = "Main"
 	searchBarPopup  ViewName = "Search Popup"
 	helpPopup       ViewName = "Help Popup"
-	playedsongsView ViewName = "Song List"
+	stationsPage    ViewName = "Stations"
+	playedsongsPage ViewName = "Played songs"
 )
 
 type UI struct {
 	app         *tview.Application
 	pages       *tview.Pages
 	infoPane    *tview.TextView
+	viewPages   *tview.Pages
 	searchBar   *tview.InputField
 	playedsongs *tview.TextView
 
@@ -145,16 +124,15 @@ func (ui *UI) ShowHelp() {
 
 func (ui *UI) HideHelp() {
 	ui.pages.HidePage(string(helpPopup))
-	ui.app.SetFocus(ui.stationsView.pages)
 }
 
-func (ui *UI) ShowPlayedsongs() {
-	ui.pages.ShowPage(string(playedsongsView))
-}
-
-func (ui *UI) HidePlayedsongs() {
-	ui.pages.HidePage(string(playedsongsView))
-	ui.app.SetFocus(ui.stationsView.pages)
+func (ui *UI) TogglePlayedsongs() {
+	if name, _ := ui.viewPages.GetFrontPage(); name == string(stationsPage) {
+		ui.viewPages.SwitchToPage(string(playedsongsPage))
+	} else {
+		ui.viewPages.SwitchToPage(string(stationsPage))
+		ui.app.SetFocus(ui.stationsView.pages)
+	}
 }
 
 func (ui *UI) RefreshPlayedsongs(songs iter.Seq[string]) {
@@ -261,11 +239,46 @@ func (ui *UI) Setup(
 
 	ui.stationsView.setup(playFunc)
 
+	ui.playedsongs = tview.NewTextView().
+		SetSize(0, 80).
+		SetDynamicColors(true)
+
+	ui.viewPages = tview.NewPages()
+	ui.viewPages.AddPage(string(stationsPage), ui.stationsView.pages, true, true)
+	ui.viewPages.AddPage(string(playedsongsPage), ui.playedsongs, true, false)
+	ui.viewPages.SetDrawFunc(
+		// Custom border
+		func(
+			screen tcell.Screen,
+			x, y, width, height int) (int, int, int, int) {
+			// Line
+			for cx := x; cx < x+width; cx++ {
+				tview.Print(
+					screen,
+					string(tview.BoxDrawingsLightHorizontal),
+					cx, y, 1, tview.AlignCenter,
+					tcell.ColorWhite)
+			}
+			// Title
+			title := " " + ui.stationsView.title[ui.stationsView.currentPage()]
+			name, _ := ui.viewPages.GetFrontPage()
+			if name == string(playedsongsPage) {
+				title = " Playlist"
+			}
+			tview.Print(
+				screen, title,
+				x, y, width, tview.AlignRight, tcell.ColorYellow)
+
+			// Return the inner rectangle where content should be drawn
+			// (We subtract 1 from the top to account for the title line)
+			return x, y + 1, width, height - 1
+		})
+
 	mainPageGrid := tview.NewGrid().
 		SetColumns(100).
 		SetRows(4, 0).
 		AddItem(ui.infoPane, 0, 0, 1, 1, 3, 80, false).
-		AddItem(ui.stationsView.pages, 1, 0, 1, 1, 20, 80, true)
+		AddItem(ui.viewPages, 1, 0, 1, 1, 20, 80, true)
 
 	ui.searchBar = tview.NewInputField().
 		SetFieldWidth(searchBarWidth).
@@ -295,23 +308,10 @@ func (ui *UI) Setup(
 		SetText(makeHelpText(keyMap))
 	helpText.SetBorder(true)
 
-	ui.playedsongs = tview.NewTextView().
-		SetSize(0, 80).
-		SetDynamicColors(true).
-		SetDoneFunc(func(_ tcell.Key) {
-			ui.HidePlayedsongs()
-		})
-	ui.playedsongs.SetBorder(true)
-	playedsongsGrid := tview.NewGrid().
-		SetColumns(100).
-		SetRows(4, 0).
-		AddItem(ui.playedsongs, 1, 0, 1, 1, 20, 80, true)
-
 	ui.pages = tview.NewPages()
 	ui.pages.AddPage(string(mainView), mainPageGrid, true, true)
 	ui.pages.AddPage(string(searchBarPopup), searchBarGrid, true, false)
 	ui.pages.AddPage(string(helpPopup), helpText, true, false)
-	ui.pages.AddPage(string(playedsongsView), playedsongsGrid, true, false)
 
 	ui.app = tview.NewApplication()
 	ui.app.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {

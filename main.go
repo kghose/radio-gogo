@@ -85,7 +85,7 @@ func main() {
 		'-': {Help: "Unfave station", Fn: func() { stnFunc(unfaveStation) }},
 		'+': {Help: "Fave playing station", Fn: func() { stnFunc(favePlayingStation) }},
 		'_': {Help: "Unfave playing station", Fn: func() { stnFunc(unfavePlayingStation) }},
-		'.': {Help: "Show played songs", Fn: ui.ShowPlayedsongs},
+		'.': {Help: "Show played songs", Fn: ui.TogglePlayedsongs},
 		'?': {Help: "Show help", Fn: ui.ShowHelp},
 		'p': {Help: "Pause", Fn: func() { mpvPlayer.TogglePause() }},
 		'q': {Help: "Quit", Fn: ui.Stop},
