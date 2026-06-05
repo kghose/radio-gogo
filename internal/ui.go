@@ -126,15 +126,6 @@ func (ui *UI) HideHelp() {
 	ui.pages.HidePage(string(helpPopup))
 }
 
-func (ui *UI) TogglePlayedsongs() {
-	if name, _ := ui.listsPane.GetFrontPage(); name == string(stationsPage) {
-		ui.listsPane.SwitchToPage(string(playedsongsPage))
-	} else {
-		ui.listsPane.SwitchToPage(string(stationsPage))
-		ui.app.SetFocus(ui.stationsView.pages)
-	}
-}
-
 func (ui *UI) RefreshPlayedsongs(songs iter.Seq[string]) {
 	ui.app.QueueUpdateDraw(func() {
 		ui.playedsongs.SetText(strings.Join(slices.Collect(songs), "\n"))
@@ -160,6 +151,7 @@ func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
 }
 
 func (ui *UI) show(pageName PageName) {
+	ui.listsPane.SwitchToPage(string(stationsPage))
 	ui.stationsView.pages.SwitchToPage(string(pageName))
 }
 
@@ -173,6 +165,10 @@ func (ui *UI) ShowFaves() {
 
 func (ui *UI) ShowSearch() {
 	ui.show(searchPage)
+}
+
+func (ui *UI) ShowPlayedSongs() {
+	ui.listsPane.SwitchToPage(string(playedsongsPage))
 }
 
 func (ui *UI) SelectedURL() string {
@@ -263,7 +259,7 @@ func (ui *UI) Setup(
 			title := ui.stationsView.title[ui.stationsView.currentPage()]
 			name, _ := ui.listsPane.GetFrontPage()
 			if name == string(playedsongsPage) {
-				title = name 
+				title = name
 			}
 			tview.Print(
 				screen, " "+title,
