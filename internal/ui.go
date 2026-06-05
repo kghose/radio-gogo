@@ -99,8 +99,8 @@ const (
 type UI struct {
 	app         *tview.Application
 	pages       *tview.Pages
-	infoPane    *tview.TextView
-	viewPages   *tview.Pages
+	stnInfoPane *tview.TextView
+	listsPane   *tview.Pages
 	searchBar   *tview.InputField
 	playedsongs *tview.TextView
 
@@ -127,10 +127,10 @@ func (ui *UI) HideHelp() {
 }
 
 func (ui *UI) TogglePlayedsongs() {
-	if name, _ := ui.viewPages.GetFrontPage(); name == string(stationsPage) {
-		ui.viewPages.SwitchToPage(string(playedsongsPage))
+	if name, _ := ui.listsPane.GetFrontPage(); name == string(stationsPage) {
+		ui.listsPane.SwitchToPage(string(playedsongsPage))
 	} else {
-		ui.viewPages.SwitchToPage(string(stationsPage))
+		ui.listsPane.SwitchToPage(string(stationsPage))
 		ui.app.SetFocus(ui.stationsView.pages)
 	}
 }
@@ -156,7 +156,7 @@ func (ui *UI) SetNowPlaying(meta mpv.MpvMetadata) {
 		meta.Description,
 		meta.Genre,
 		playStateString[meta.Playing], meta.Title)
-	ui.app.QueueUpdateDraw(func() { ui.infoPane.SetText(text) })
+	ui.app.QueueUpdateDraw(func() { ui.stnInfoPane.SetText(text) })
 }
 
 func (ui *UI) show(pageName PageName) {
@@ -233,9 +233,9 @@ func (ui *UI) Setup(
 	searchFunc func(string),
 	playFunc func(int, string, string, rune)) {
 
-	ui.infoPane = tview.NewTextView()
-	ui.infoPane.SetBorder(false)
-	ui.infoPane.SetDynamicColors(true)
+	ui.stnInfoPane = tview.NewTextView()
+	ui.stnInfoPane.SetBorder(false)
+	ui.stnInfoPane.SetDynamicColors(true)
 
 	ui.stationsView.setup(playFunc)
 
@@ -243,10 +243,10 @@ func (ui *UI) Setup(
 		SetSize(0, 80).
 		SetDynamicColors(true)
 
-	ui.viewPages = tview.NewPages()
-	ui.viewPages.AddPage(string(stationsPage), ui.stationsView.pages, true, true)
-	ui.viewPages.AddPage(string(playedsongsPage), ui.playedsongs, true, false)
-	ui.viewPages.SetDrawFunc(
+	ui.listsPane = tview.NewPages()
+	ui.listsPane.AddPage(string(stationsPage), ui.stationsView.pages, true, true)
+	ui.listsPane.AddPage(string(playedsongsPage), ui.playedsongs, true, false)
+	ui.listsPane.SetDrawFunc(
 		// Custom border
 		func(
 			screen tcell.Screen,
@@ -260,13 +260,13 @@ func (ui *UI) Setup(
 					tcell.ColorWhite)
 			}
 			// Title
-			title := " " + ui.stationsView.title[ui.stationsView.currentPage()]
-			name, _ := ui.viewPages.GetFrontPage()
+			title := ui.stationsView.title[ui.stationsView.currentPage()]
+			name, _ := ui.listsPane.GetFrontPage()
 			if name == string(playedsongsPage) {
-				title = " Playlist"
+				title = name 
 			}
 			tview.Print(
-				screen, title,
+				screen, " "+title,
 				x, y, width, tview.AlignRight, tcell.ColorYellow)
 
 			// Return the inner rectangle where content should be drawn
@@ -277,8 +277,8 @@ func (ui *UI) Setup(
 	mainPageGrid := tview.NewGrid().
 		SetColumns(100).
 		SetRows(4, 0).
-		AddItem(ui.infoPane, 0, 0, 1, 1, 3, 80, false).
-		AddItem(ui.viewPages, 1, 0, 1, 1, 20, 80, true)
+		AddItem(ui.stnInfoPane, 0, 0, 1, 1, 3, 80, false).
+		AddItem(ui.listsPane, 1, 0, 1, 1, 20, 80, true)
 
 	ui.searchBar = tview.NewInputField().
 		SetFieldWidth(searchBarWidth).
