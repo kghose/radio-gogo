@@ -3,31 +3,31 @@ package radio
 import (
 	"testing"
 
-	cmp "github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp"
 
-	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
+	"github.com/kghose/radio-go-go/internal/radiobrowser"
 )
 
 func TestParseSearchString(t *testing.T) {
 	tests := []struct {
 		name         string
 		searchString string
-		want         radioBrowser.SearchQuery
+		want         radiobrowser.SearchQuery
 	}{
 		{
 			"No keys",
 			"hard rock,jazz",
-			radioBrowser.SearchQuery{
+			radiobrowser.SearchQuery{
 				TagList: []string{"hard rock,jazz"}}},
 		{
 			"Multiple keys",
 			"t:hard rock t:jazz",
-			radioBrowser.SearchQuery{
+			radiobrowser.SearchQuery{
 				TagList: []string{"hard rock", "jazz"}}},
 		{
 			"All keys",
 			"n:BBC c:antigua c:Albania t:jazz  t: classic rock",
-			radioBrowser.SearchQuery{
+			radiobrowser.SearchQuery{
 				Name:    "BBC",
 				Country: "Albania",
 				TagList: []string{"jazz", "classic rock"}}},

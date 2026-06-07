@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
+	"github.com/kghose/radio-go-go/internal/radiobrowser"
 )
 
 const searchHelp = `
@@ -23,8 +23,8 @@ finds [blue]BBC Radio 6 music[-] for us.
 
 var re = regexp.MustCompile(`((^|\s)[n|c|t]:)`)
 
-func ParseSearchString(searchStr string) radioBrowser.SearchQuery {
-	sq := radioBrowser.SearchQuery{}
+func ParseSearchString(searchStr string) radiobrowser.SearchQuery {
+	sq := radiobrowser.SearchQuery{}
 	indices := re.FindAllStringIndex(searchStr, -1)
 	if len(indices) == 0 {
 		sq.TagList = []string{searchStr}

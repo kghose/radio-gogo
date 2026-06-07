@@ -2,7 +2,7 @@
 Functions to find and query radio browser servers
 */
 
-package radio_browser
+package radiobrowser
 
 import (
 	"encoding/json"

@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"time"
 
-	radio "github.com/kghose/radio-go-go/internal"
-	mpv "github.com/kghose/radio-go-go/internal/mpv"
-	radio_browser "github.com/kghose/radio-go-go/internal/radio_browser"
+	"github.com/kghose/radio-go-go/internal"
+	"github.com/kghose/radio-go-go/internal/mpv"
+	"github.com/kghose/radio-go-go/internal/radiobrowser"
 )
 
 type StationOp int
@@ -28,13 +28,13 @@ func main() {
 	mpvPlayer.Start()
 	defer mpvPlayer.Quit()
 
-	servers, err := radio_browser.GetAvailableServers()
+	servers, err := radiobrowser.GetAvailableServers()
 	if err != nil {
 		slog.Error("Could not find radio browser servers")
 		servers = []string{""}
 	}
 
-	server := radio_browser.PickRandomServer(servers)
+	server := radiobrowser.PickRandomServer(servers)
 
 	songlog := radio.SongLog{}
 
@@ -94,7 +94,7 @@ func main() {
 	searchFunc := func(searchStr string) {
 		searchString = searchStr
 		sq := radio.ParseSearchString(searchStr)
-		stations, err := radio_browser.StationSearch(sq, server)
+		stations, err := radiobrowser.StationSearch(sq, server)
 		if err != nil {
 			slog.Error("Error searching for stations.")
 		}

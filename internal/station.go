@@ -7,7 +7,7 @@ manage.
 package radio
 
 import (
-	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
+	"github.com/kghose/radio-go-go/internal/radiobrowser"
 
 	"slices"
 	"strings"
@@ -19,7 +19,7 @@ const STATION_NAME_JUNK_CHARS = "_.-+*# "
 
 // A radio station we may have played and may have marked as favorite.
 type Station struct {
-	Details    radioBrowser.Station
+	Details    radiobrowser.Station
 	LastPlayed time.Time // The last time we played this
 	Favorite   bool      // In our favorites list?
 }
@@ -92,7 +92,7 @@ func SortLastPlayed(index map[string]*Station) []*Station {
 }
 
 func MakeNewIndexFromSearch(
-	sl []radioBrowser.Station,
+	sl []radiobrowser.Station,
 	oldIndex map[string]*Station,
 ) (map[string]*Station, []string) {
 	index := History(oldIndex)

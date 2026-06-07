@@ -2,7 +2,7 @@ package radio
 
 import (
 	cmp "github.com/google/go-cmp/cmp"
-	radioBrowser "github.com/kghose/radio-go-go/internal/radio_browser"
+	"github.com/kghose/radio-go-go/internal/radiobrowser"
 	"testing"
 	"time"
 )
@@ -18,7 +18,7 @@ func TestSanitize(t *testing.T) {
 
 func TestSanitizeStation(t *testing.T) {
 	station := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "\x00name",
 			URLResolved: "url\x0d",
 			URL:         "\u200burl",
@@ -27,7 +27,7 @@ func TestSanitizeStation(t *testing.T) {
 		true}
 	sanitizeStation(&station)
 	want := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "name",
 			URLResolved: "url",
 			URL:         "url",
@@ -41,7 +41,7 @@ func TestSanitizeStation(t *testing.T) {
 
 func TestHistory(t *testing.T) {
 	sA := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "a",
 			URLResolved: "urlA",
 			URL:         "boo",
@@ -49,7 +49,7 @@ func TestHistory(t *testing.T) {
 		time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
 		false}
 	sB := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "b",
 			URLResolved: "urlB",
 			URL:         "boo",
@@ -57,7 +57,7 @@ func TestHistory(t *testing.T) {
 		time.Time{},
 		true}
 	sC := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "c",
 			URLResolved: "urlC",
 			URL:         "boo",
@@ -75,7 +75,7 @@ func TestHistory(t *testing.T) {
 
 func TestMakeNewIndexFromSearch(t *testing.T) {
 	iA := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "a",
 			URLResolved: "urlA",
 			URL:         "boo",
@@ -83,7 +83,7 @@ func TestMakeNewIndexFromSearch(t *testing.T) {
 		time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
 		false}
 	iB := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "b",
 			URLResolved: "urlB",
 			URL:         "boo",
@@ -91,7 +91,7 @@ func TestMakeNewIndexFromSearch(t *testing.T) {
 		time.Time{},
 		true}
 	iC := Station{
-		radioBrowser.Station{
+		radiobrowser.Station{
 			Name:        "c",
 			URLResolved: "urlC",
 			URL:         "boo",
@@ -99,19 +99,19 @@ func TestMakeNewIndexFromSearch(t *testing.T) {
 		time.Time{},
 		false}
 
-	sN := radioBrowser.Station{
+	sN := radiobrowser.Station{
 		Name:        "a-new",
 		URLResolved: "urlA",
 		URL:         "boo",
 	}
-	sM := radioBrowser.Station{
+	sM := radiobrowser.Station{
 		Name:        "b",
 		URLResolved: "urlM",
 		URL:         "boo",
 	}
 
 	gotIndex, gotUrl := MakeNewIndexFromSearch(
-		[]radioBrowser.Station{sN, sM},
+		[]radiobrowser.Station{sN, sM},
 		map[string]*Station{
 			"urlA": &iA, "urlB": &iB, "urlC": &iC})
 
