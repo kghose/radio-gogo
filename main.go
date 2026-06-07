@@ -77,15 +77,15 @@ func main() {
 	}
 
 	keyMap := map[rune]radio.KeyFunc{
-		'h': {Help: "Show history pane", Fn: ui.ShowHist},
-		's': {Help: "Show search pane", Fn: ui.ShowSearch},
+		'1': {Help: "Show history pane", Fn: ui.ShowHist},
+		'2': {Help: "Show search pane", Fn: ui.ShowSearch},
 		'/': {Help: "Search", Fn: ui.ShowSearchBar},
-		'f': {Help: "Show faves pane", Fn: ui.ShowFaves},
+		'3': {Help: "Show faves pane", Fn: ui.ShowFaves},
 		'=': {Help: "Fave station", Fn: func() { stnFunc(faveStation) }},
 		'-': {Help: "Unfave station", Fn: func() { stnFunc(unfaveStation) }},
 		'+': {Help: "Fave playing station", Fn: func() { stnFunc(favePlayingStation) }},
 		'_': {Help: "Unfave playing station", Fn: func() { stnFunc(unfavePlayingStation) }},
-		'.': {Help: "Show played songs", Fn: ui.ShowPlayedSongs},
+		'4': {Help: "Show played songs", Fn: ui.ShowPlayedSongs},
 		'?': {Help: "Show help", Fn: ui.ShowHelp},
 		'p': {Help: "Pause", Fn: func() { mpvPlayer.TogglePause() }},
 		'q': {Help: "Quit", Fn: ui.Stop},
