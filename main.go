@@ -36,7 +36,7 @@ func main() {
 
 	server := radiobrowser.PickRandomServer(servers)
 
-	songlog := radio.SongLog{}
+	songlog := radio.NewSongLog(40)
 
 	stationIndex, err := LoadHistory()
 	// TODO: Handle errors
