@@ -10,11 +10,18 @@ import (
 )
 
 func SetupLoggingToFile() (*slog.Logger, func()) {
-	fname, err := logsFilePath()
+	var logPathConfig = ConfigPath{
+		env:      "XDG_STATE_HOME",
+		fallback: []string{".local", "state"},
+		name:     "radio-gogo.log",
+	}
+
+
+	path, err := getPath(logPathConfig)
 	if err != nil {
 		panic("Can't set up logging: " + err.Error())
 	}
-	file, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic("Error opening file:"  + err.Error())
 	}

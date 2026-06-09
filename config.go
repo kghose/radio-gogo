@@ -12,47 +12,63 @@ import (
 )
 
 const (
-	userDataDirName = "radio-gogo"
-	stationsFile    = "stations.json"
-	songHistoryFile = "songs.txt"
-	logFile         = "log.txt"
+	programDir = "radio-gogo"
 )
 
-func getUserDataDirPath() (string, error) {
-	home := os.Getenv("HOME")
-	dataHome := os.Getenv("XDG_DATA_HOME")
-	if dataHome == "" {
-		dataHome = path.Join(home, ".local", "share")
+type ConfigPath struct {
+	env      string
+	fallback []string
+	name     string
+}
+
+func getPath(cp ConfigPath) (string, error) {
+	dir := os.Getenv(cp.env)
+	if dir == "" {
+		home := os.Getenv("HOME")
+		dir = path.Join(home, path.Join(cp.fallback...), programDir)
+	} else {
+		dir = path.Join(dir, programDir)
 	}
-	userDataDirPath := path.Join(dataHome, userDataDirName)
-	err := os.MkdirAll(userDataDirPath, fs.FileMode(0777))
+	path := path.Join(dir, cp.name)
+	_, err := os.Stat(path)
 	if err != nil {
-		slog.Error("Unable to create data directory", "Error", err)
-		return "", err
+		err = os.MkdirAll(dir, fs.FileMode(0777))
+		if err != nil {
+			slog.Error("Unable to create dir", "path", dir, "error", err)
+			return "", err
+		}
 	}
-	return userDataDirPath, nil
+	return path, err
 }
 
-func stationsFilePath() (string, error) {
-	userDataDirPath, err := getUserDataDirPath()
-	return path.Join(
-		userDataDirPath,
-		stationsFile,
-	), err
+func loadData(path string) ([]byte, error) {
+	bytes, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		slog.Info("No file", "path", path)
+	}
+	if err != nil {
+		slog.Info("Error loading file", "error", err)
+	}
+	return bytes, err
 }
 
-func songHistoryFilePath() (string, error) {
-	userDataDirPath, err := getUserDataDirPath()
-	return path.Join(
-		userDataDirPath,
-		songHistoryFile,
-	), err
+func overwriteData(path string, bytes []byte) error {
+	f, err := os.Create(path)
+	if err != nil {
+		slog.Error("Unable to create file", "path", path, "error", err)
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.Write(bytes)
+	if err != nil {
+		slog.Error("Error saving default data", "path", path, "error", err)
+		return err
+	}
+
+	return err
 }
 
-func logsFilePath() (string, error) {
-	userDataDirPath, err := getUserDataDirPath()
-	return path.Join(
-		userDataDirPath,
-		logFile,
-	), err
+func getHistoryPath() (string, error) {
+	return getPath(historyPathConfig)
 }

@@ -1,35 +1,35 @@
 /*
-Largely, manage loading and saving the station history to file. 
+Largely, manage loading and saving the station history to file.
 */
-package main 
+package main
 
 import (
 	"encoding/json"
 	"log/slog"
-	"os"
 
 	radio "github.com/kghose/radio-go-go/internal"
 )
 
+var historyPathConfig = ConfigPath{
+	env:      "XDG_DATA_HOME",
+	fallback: []string{".local", "share"},
+	name:     "stations.json",
+}
+
 func LoadHistory() (map[string]*radio.Station, error) {
 	stations := make(map[string]*radio.Station)
 
-	fname, err := stationsFilePath()
+	path, err := getPath(historyPathConfig)
 	if err != nil {
 		return stations, err
 	}
 
-	dataBytes, err := os.ReadFile(fname)
-	if os.IsNotExist(err) {
-		slog.Info("No history file", "path", fname)
-		return stations, nil
-	}
+	data, err := loadData(path)
 	if err != nil {
-		slog.Info("Error loading history file", "Error", err)
 		return stations, err
 	}
 
-	if err = json.Unmarshal(dataBytes, &stations); err != nil {
+	if err = json.Unmarshal(data, &stations); err != nil {
 		slog.Error("Error parsing history file", "Error", err)
 		return stations, err
 	}
@@ -38,28 +38,16 @@ func LoadHistory() (map[string]*radio.Station, error) {
 }
 
 func SaveHistory(stations map[string]*radio.Station) error {
-	fname, err := stationsFilePath()
+	path, err := getPath(historyPathConfig)
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Create(fname)
-	if err != nil {
-		slog.Error("Couldn't create history file", "Error", err)
-		return err
-	}
-	defer f.Close()
-
-	dataStr, err := json.MarshalIndent(radio.History(stations), "", " ")
+	data, err := json.MarshalIndent(radio.History(stations), "", " ")
 	if err != nil {
 		slog.Error("Error formatting station history", "Error", err)
 		return err
 	}
-	_, err = f.Write(dataStr)
-	if err != nil {
-		slog.Error("Error saving history", "Error", err)
-		return err
-	}
 
-	return nil
+	return overwriteData(path, data)
 }

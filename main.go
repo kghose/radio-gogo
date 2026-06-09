@@ -36,6 +36,8 @@ func main() {
 
 	server := radiobrowser.PickRandomServer(servers)
 
+	stringfilters := loadStringFilters()
+
 	songlog := radio.NewSongLog(40)
 
 	stationIndex, err := LoadHistory()
@@ -119,8 +121,10 @@ func main() {
 		for ; ; <-ticker.C {
 			meta := mpvPlayer.Meta()
 			ui.SetNowPlaying(meta)
-			if songlog.Add(meta.Title) {
-				ui.RefreshPlayedsongs(songlog.Songs())
+			if stringfilters.IsSongTitle(meta.Title) {
+				if songlog.Add(meta.Title) {
+					ui.RefreshPlayedsongs(songlog.Songs())
+				}
 			}
 		}
 	}
