@@ -62,7 +62,7 @@ func itemTitle(station *Station) string {
 	}
 	return fmt.Sprintf(
 		"%-1s %-30.30s [blue]%s",
-		heart, station.Details.Name, station.Details.URLResolved)
+		heart, station.Name, station.URLResolved)
 }
 
 func (sv *StationsView) set(stations []*Station, pageName PageName, title string, reset_view bool) {
@@ -79,7 +79,7 @@ func (sv *StationsView) set(stations []*Station, pageName PageName, title string
 	list.Clear()
 	for _, station := range stations {
 		list.AddItem(
-			itemTitle(station), station.Details.URLResolved, 0, nil)
+			itemTitle(station), station.URLResolved, 0, nil)
 	}
 	list.SetCurrentItem(selRow)
 	list.SetOffset(offRow, 0)

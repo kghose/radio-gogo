@@ -19,7 +19,7 @@ const STATION_NAME_JUNK_CHARS = "_.-+*# "
 
 // A radio station we may have played and may have marked as favorite.
 type Station struct {
-	Details    radiobrowser.Station
+	radiobrowser.Station
 	LastPlayed time.Time // The last time we played this
 	Favorite   bool      // In our favorites list?
 }
@@ -34,9 +34,9 @@ func sanitize(s *string) string {
 }
 
 func sanitizeStation(s *Station) {
-	s.Details.Name = strings.TrimLeft(sanitize(&s.Details.Name), STATION_NAME_JUNK_CHARS)
-	s.Details.URLResolved = sanitize(&s.Details.URLResolved)
-	s.Details.URL = sanitize(&s.Details.URL)
+	s.Name = strings.TrimLeft(sanitize(&s.Name), STATION_NAME_JUNK_CHARS)
+	s.URLResolved = sanitize(&s.URLResolved)
+	s.URL = sanitize(&s.URL)
 }
 
 func History(index map[string]*Station) map[string]*Station {
@@ -74,8 +74,8 @@ func SortAlpha(index map[string]*Station) []*Station {
 	}
 	slices.SortFunc(l, func(a, b *Station) int {
 		return strings.Compare(
-			strings.ToLower(a.Details.Name),
-			strings.ToLower(b.Details.Name))
+			strings.ToLower(a.Name),
+			strings.ToLower(b.Name))
 	})
 	return l
 }
