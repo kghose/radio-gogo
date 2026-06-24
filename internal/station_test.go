@@ -18,22 +18,20 @@ func TestSanitize(t *testing.T) {
 
 func TestSanitizeStation(t *testing.T) {
 	station := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "\x00name",
 			URLResolved: "url\x0d",
 			URL:         "\u200burl",
 		},
-		time.Time{},
-		true}
+		Favorite: true}
 	sanitizeStation(&station)
 	want := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "name",
 			URLResolved: "url",
 			URL:         "url",
 		},
-		time.Time{},
-		true}
+		Favorite: true}
 	if station != want {
 		t.Errorf("Sanitize station fails")
 	}
@@ -41,29 +39,27 @@ func TestSanitizeStation(t *testing.T) {
 
 func TestHistory(t *testing.T) {
 	sA := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "a",
 			URLResolved: "urlA",
 			URL:         "boo",
 		},
-		time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
-		false}
+		LastPlayed: time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
+	}
 	sB := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "b",
 			URLResolved: "urlB",
 			URL:         "boo",
 		},
-		time.Time{},
-		true}
+		Favorite: true}
 	sC := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "c",
 			URLResolved: "urlC",
 			URL:         "boo",
 		},
-		time.Time{},
-		false}
+	}
 	got := History(map[string]*Station{
 		"urlA": &sA, "urlB": &sB, "urlC": &sC})
 	want := map[string]*Station{
@@ -75,29 +71,27 @@ func TestHistory(t *testing.T) {
 
 func TestMakeNewIndexFromSearch(t *testing.T) {
 	iA := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "a",
 			URLResolved: "urlA",
 			URL:         "boo",
 		},
-		time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
-		false}
+		LastPlayed: time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
+	}
 	iB := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "b",
 			URLResolved: "urlB",
 			URL:         "boo",
 		},
-		time.Time{},
-		true}
+		Favorite: true}
 	iC := Station{
-		radiobrowser.Station{
+		Station: radiobrowser.Station{
 			Name:        "c",
 			URLResolved: "urlC",
 			URL:         "boo",
 		},
-		time.Time{},
-		false}
+	}
 
 	sN := radiobrowser.Station{
 		Name:        "a-new",
@@ -115,7 +109,7 @@ func TestMakeNewIndexFromSearch(t *testing.T) {
 		map[string]*Station{
 			"urlA": &iA, "urlB": &iB, "urlC": &iC})
 
-	iM := Station{sM, time.Time{}, false}
+	iM := Station{Station: sM, SearchResult: true}
 	wantIndex := map[string]*Station{
 		"urlA": &iA, "urlB": &iB, "urlM": &iM}
 	if diff := cmp.Diff(wantIndex, gotIndex); diff != "" {
