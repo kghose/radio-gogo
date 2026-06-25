@@ -5,7 +5,6 @@ package radio
 
 import (
 	"fmt"
-	"iter"
 	"maps"
 	"slices"
 	"strings"
@@ -127,9 +126,9 @@ func (ui *UI) HideHelp() {
 	ui.pages.HidePage(string(helpPopup))
 }
 
-func (ui *UI) RefreshPlayedsongs(songs iter.Seq[string]) {
+func (ui *UI) RefreshPlayedsongs(songs []string) {
 	ui.app.QueueUpdateDraw(func() {
-		ui.playedsongs.SetText(strings.Join(slices.Collect(songs), "\n"))
+		ui.playedsongs.SetText(strings.Join(songs, "\n"))
 	})
 }
 

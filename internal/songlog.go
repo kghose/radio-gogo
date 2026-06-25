@@ -3,10 +3,6 @@ Keep a rolling buffer of the most recently played songs
 */
 package radio
 
-import (
-	"iter"
-)
-
 type SongLog struct {
 	songs []string
 	idx   int
@@ -35,22 +31,21 @@ func (sl *SongLog) Add(song string) bool {
 	return true
 }
 
-func (sl *SongLog) Songs() iter.Seq[string] {
-	return func(yield func(string) bool) {
-		for i := sl.idx - 1; i >= 0; i-- {
-			if sl.songs[i] == "" {
-				return
-			} else {
-				yield(sl.songs[i])
-			}
+func (sl *SongLog) Songs() []string {
+	songs := []string{}
+	for i := sl.idx - 1; i >= 0; i-- {
+		if sl.songs[i] == "" {
+			return songs
+		} else {
+			songs = append(songs, sl.songs[i])
 		}
-		for i := len(sl.songs) - 1; i >= sl.idx; i-- {
-			if sl.songs[i] == "" {
-				return
-			} else {
-				yield(sl.songs[i])
-			}
-		}
-
 	}
+	for i := len(sl.songs) - 1; i >= sl.idx; i-- {
+		if sl.songs[i] == "" {
+			return songs
+		} else {
+			songs = append(songs, sl.songs[i])
+		}
+	}
+	return songs
 }

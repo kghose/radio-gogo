@@ -70,10 +70,7 @@ func TestRetrieval(t *testing.T) {
 				sl.Add(s)
 			}
 
-			got := []string{}
-			for song := range sl.Songs() {
-				got = append(got, song)
-			}
+			got := sl.Songs()
 
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf(
