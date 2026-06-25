@@ -179,19 +179,19 @@ func (ui *UI) SelectedURL() string {
 	return url
 }
 
-func (ui *UI) SetHist(stations []*Station) {
+func (ui *UI) setHist(stations []*Station) {
 	ui.stationsView.set(
 		stations,
 		histPage, string(histPage), false)
 }
 
-func (ui *UI) SetFaves(stations []*Station) {
+func (ui *UI) setFaves(stations []*Station) {
 	ui.stationsView.set(
 		stations,
 		favesPage, string(favesPage), false)
 }
 
-func (ui *UI) SetSearch(stations []*Station) {
+func (ui *UI) setSearch(stations []*Station) {
         title := ui.searchString
 	if title == "" {
 		title = "Search"
@@ -207,9 +207,9 @@ func (ui *UI) ResetSearchScroll() {
 }
 
 func (ui *UI) RefreshLists(index map[string]*Station) {
-	ui.SetHist(SortLastPlayed(History(index)))
-	ui.SetFaves(SortAlpha(Faves(index)))
-	ui.SetSearch(SortAlpha(Search(index)))
+	ui.setHist(SortLastPlayed(History(index)))
+	ui.setFaves(SortAlpha(Faves(index)))
+	ui.setSearch(SortAlpha(Search(index)))
 }
 
 func (ui *UI) SetSearchString(searchString string) {
