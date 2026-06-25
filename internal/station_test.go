@@ -38,86 +38,100 @@ func TestSanitizeStation(t *testing.T) {
 }
 
 func TestHistory(t *testing.T) {
-	sA := Station{
+	playedStation := Station{
 		Station: radiobrowser.Station{
-			Name:        "a",
-			URLResolved: "urlA",
-			URL:         "boo",
+			URLResolved: "played",
 		},
 		LastPlayed: time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
 	}
-	sB := Station{
+	favedStation := Station{
 		Station: radiobrowser.Station{
-			Name:        "b",
-			URLResolved: "urlB",
-			URL:         "boo",
+			URLResolved: "faved",
 		},
 		Favorite: true}
-	sC := Station{
+	otherStation := Station{
 		Station: radiobrowser.Station{
-			Name:        "c",
-			URLResolved: "urlC",
-			URL:         "boo",
+			URLResolved: "other",
 		},
 	}
-	got := History(map[string]*Station{
-		"urlA": &sA, "urlB": &sB, "urlC": &sC})
+
+	index := map[string]*Station{
+		"played": &playedStation,
+		"faved":  &favedStation,
+		"other":  &otherStation,
+	}
 	want := map[string]*Station{
-		"urlA": &sA, "urlB": &sB}
+		"played": &playedStation,
+		"faved":  &favedStation,
+	}
+	got := History(index)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("History from index mismatch (-want +got):\n%s", diff)
 	}
 }
 
 func TestMakeNewIndexFromSearch(t *testing.T) {
-	iA := Station{
+	currentIndexA := Station{
 		Station: radiobrowser.Station{
-			Name:        "a",
-			URLResolved: "urlA",
-			URL:         "boo",
+			URLResolved: "played",
 		},
 		LastPlayed: time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
 	}
-	iB := Station{
+	currentIndexB := Station{
 		Station: radiobrowser.Station{
-			Name:        "b",
-			URLResolved: "urlB",
-			URL:         "boo",
+			URLResolved: "faved",
 		},
-		Favorite: true}
-	iC := Station{
+		Favorite:     true,
+		SearchResult: true,
+	}
+	currentIndexC := Station{
 		Station: radiobrowser.Station{
-			Name:        "c",
-			URLResolved: "urlC",
-			URL:         "boo",
+			URLResolved: "search",
 		},
+		SearchResult: true,
+	}
+	currentIndex := map[string]*Station{
+		"played": &currentIndexA,
+		"faved":  &currentIndexB,
+		"search": &currentIndexC,
 	}
 
 	sN := radiobrowser.Station{
-		Name:        "a-new",
-		URLResolved: "urlA",
-		URL:         "boo",
+		URLResolved: "played",
 	}
 	sM := radiobrowser.Station{
-		Name:        "b",
-		URLResolved: "urlM",
-		URL:         "boo",
+		URLResolved: "new search",
+	}
+	searchResult := []radiobrowser.Station{sN, sM}
+
+	newIndexA := Station{
+		Station: radiobrowser.Station{
+			URLResolved: "played",
+		},
+		LastPlayed:   time.Date(2026, time.May, 12, 0, 0, 0, 0, time.UTC),
+		SearchResult: true,
+	}
+	newIndexB := Station{
+		Station: radiobrowser.Station{
+			URLResolved: "faved",
+		},
+		Favorite: true,
+	}
+	newIndexC := Station{
+		Station: radiobrowser.Station{
+			URLResolved: "new search",
+		},
+		SearchResult: true,
+	}
+	want := map[string]*Station{
+		"played":     &newIndexA,
+		"faved":      &newIndexB,
+		"new search": &newIndexC,
 	}
 
-	gotIndex, gotUrl := MakeNewIndexFromSearch(
-		[]radiobrowser.Station{sN, sM},
-		map[string]*Station{
-			"urlA": &iA, "urlB": &iB, "urlC": &iC})
-
-	iM := Station{Station: sM, SearchResult: true}
-	wantIndex := map[string]*Station{
-		"urlA": &iA, "urlB": &iB, "urlM": &iM}
-	if diff := cmp.Diff(wantIndex, gotIndex); diff != "" {
+	got := MakeNewIndexFromSearch(searchResult, currentIndex)
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("New index from search mismatch (-want +got):\n%s", diff)
 	}
 
-	wantUrl := []string{"urlA", "urlM"}
-	if diff := cmp.Diff(wantUrl, gotUrl); diff != "" {
-		t.Errorf("New index from search URL mismatch (-want +got):\n%s", diff)
-	}
 }

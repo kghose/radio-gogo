@@ -20,8 +20,9 @@ const STATION_NAME_JUNK_CHARS = "_.-+*# "
 // A radio station we may have played and may have marked as favorite.
 type Station struct {
 	radiobrowser.Station
-	LastPlayed time.Time // The last time we played this
-	Favorite   bool      // In our favorites list?
+	LastPlayed   time.Time // The last time we played this
+	Favorite     bool      // In our favorites list?
+	SearchResult bool      `json:"-"` // Current search result? (No need to save in station history)
 }
 
 func sanitize(s *string) string {
@@ -59,10 +60,12 @@ func Faves(index map[string]*Station) map[string]*Station {
 	return faves
 }
 
-func Search(index map[string]*Station, urls []string) map[string]*Station {
+func Search(index map[string]*Station) map[string]*Station {
 	s := make(map[string]*Station)
-	for _, url := range urls {
-		s[url] = index[url]
+	for k, v := range index {
+		if v.SearchResult {
+			s[k] = v
+		}
 	}
 	return s
 }
@@ -91,23 +94,32 @@ func SortLastPlayed(index map[string]*Station) []*Station {
 	return l
 }
 
+func wipeSearchFlagFromIndex(index map[string]*Station) {
+	for _, v := range index {
+		v.SearchResult = false
+	}
+}
+
 func MakeNewIndexFromSearch(
 	sl []radiobrowser.Station,
 	oldIndex map[string]*Station,
-) (map[string]*Station, []string) {
+) map[string]*Station {
 	index := History(oldIndex)
-	urls := []string{}
+	wipeSearchFlagFromIndex(index)
 	for i := range sl {
 		url := sl[i].URLResolved
 		if _, ok := index[url]; ok {
 			// TODO: Take care of station metadata changes
+			index[url].SearchResult = true
 		} else {
-			index[url] = &Station{sl[i], time.Time{}, false}
+			index[url] = &Station{
+				Station:      sl[i],
+				SearchResult: true,
+			}
 			sanitizeStation(index[url])
 		}
-		urls = append(urls, url)
 	}
-	return index, urls
+	return index
 }
 
 type StationOp string
