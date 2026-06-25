@@ -105,6 +105,7 @@ type UI struct {
 	playedsongs *tview.TextView
 
 	stationsView StationsView
+	searchString string
 }
 
 func (ui *UI) ShowSearchBar() {
@@ -190,10 +191,14 @@ func (ui *UI) SetFaves(stations []*Station) {
 		favesPage, string(favesPage), false)
 }
 
-func (ui *UI) SetSearch(stations []*Station, keywords string) {
+func (ui *UI) SetSearch(stations []*Station) {
+        title := ui.searchString
+	if title == "" {
+		title = "Search"
+	}
 	ui.stationsView.set(
 		stations,
-		searchPage, keywords, false)
+		searchPage, title, false)
 }
 
 func (ui *UI) ResetSearchScroll() {
@@ -201,10 +206,14 @@ func (ui *UI) ResetSearchScroll() {
 	ui.stationsView.lists[searchPage].SetOffset(0, 0)
 }
 
-func (ui *UI) RefreshLists(index map[string]*Station, keywords string) {
+func (ui *UI) RefreshLists(index map[string]*Station) {
 	ui.SetHist(SortLastPlayed(History(index)))
 	ui.SetFaves(SortAlpha(Faves(index)))
-	ui.SetSearch(SortAlpha(Search(index)), keywords)
+	ui.SetSearch(SortAlpha(Search(index)))
+}
+
+func (ui *UI) SetSearchString(searchString string) {
+	ui.searchString = searchString
 }
 
 type KeyFunc struct {
