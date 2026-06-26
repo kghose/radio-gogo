@@ -6,7 +6,9 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"github.com/kghose/radio-go-go/internal"
+	"log/slog"
 )
 
 //go:embed filters.json
@@ -24,13 +26,19 @@ func loadStringFilters() radio.StringFilters {
 
 	path, err := getPath(filtersPathConfig)
 	if err != nil {
-		return filters 
+		slog.Error("Error loading filters file", "Error", err)
+		return filters
 	}
 
 	data, err := loadData(path)
 	if len(data) == 0 {
 		data, _ = f.ReadFile("filters.json")
+		slog.Info("Creating default string filters file")
 		overwriteData(path, data)
+	}
+
+	if err = json.Unmarshal(data, &filters); err != nil {
+		slog.Error("Error parsing string filters file", "Error", err)
 	}
 
 	return filters
