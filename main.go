@@ -38,8 +38,6 @@ func main() {
 
 	stringfilters := loadStringFilters()
 
-	songlog := radio.NewSongLog(40)
-
 	stationIndex, err := LoadHistory()
 	// TODO: Handle errors
 	if err != nil {
@@ -116,13 +114,13 @@ func main() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
+		ps := NewPlayedSongs(100, &stringfilters)
+
 		for ; ; <-ticker.C {
 			meta := mpvPlayer.Meta()
 			ui.SetNowPlaying(meta)
-			if stringfilters.IsSongTitle(meta.Title) {
-				if songlog.Add(meta.Title) {
-					ui.RefreshPlayedsongs(songlog.Songs())
-				}
+			if ps.add(meta.Title) {
+				ui.RefreshPlayedsongs(ps.buf.Songs())
 			}
 		}
 	}
