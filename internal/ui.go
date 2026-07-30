@@ -239,7 +239,7 @@ func (ui *UI) Setup(
 
 	ui.stnInfoPane = tview.NewTextView()
 	ui.stnInfoPane.SetBorder(false)
-	ui.stnInfoPane.SetDynamicColors(true)
+	ui.stnInfoPane.SetDynamicColors(true).SetWrap(false)
 
 	ui.stationsView.setup(playFunc)
 
