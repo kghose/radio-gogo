@@ -3,7 +3,9 @@
  */
 package radio
 
-import ()
+import (
+	"iter"
+)
 
 type HistoryNode struct {
 	val  string
@@ -23,16 +25,6 @@ func NewHistorySet(maxSize uint64) HistorySet {
 	return HistorySet{
 		maxSize: maxSize,
 		index:   map[string]*HistoryNode{}}
-}
-
-func (hs *HistorySet) ToList() []string {
-	history := []string{}
-	node := hs.head
-	for node != nil {
-		history = append(history, node.val)
-		node = node.next
-	}
-	return history
 }
 
 func (hs *HistorySet) removeTail() {
@@ -96,5 +88,29 @@ func (hs *HistorySet) Add(s string) {
 		hs.moveToHead(node)
 	} else {
 		hs.addToHead(s)
+	}
+}
+
+func (hs *HistorySet) ByLatest() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		node := hs.head
+		for node != nil {
+			if !yield(node.val) {
+				return
+			}
+			node = node.next
+		}
+	}
+}
+
+func (hs *HistorySet) ByOldest() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		node := hs.tail
+		for node != nil {
+			if !yield(node.val) {
+				return
+			}
+			node = node.prev
+		}
 	}
 }

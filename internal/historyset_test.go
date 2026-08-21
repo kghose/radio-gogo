@@ -1,6 +1,7 @@
 package radio
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -46,7 +47,7 @@ func TestAddToHistorySet(t *testing.T) {
 				hs.Add(inp)
 			}
 
-			got := hs.ToList()
+			got := slices.Collect(hs.ByLatest())
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf(
 					"History set mismatch (-want +got):\n%s",
@@ -54,4 +55,21 @@ func TestAddToHistorySet(t *testing.T) {
 			}
 		})
 	}
+}
+
+
+func TestByOldest(t *testing.T) {
+			hs := NewHistorySet(3)
+				hs.Add("a")
+				hs.Add("b")
+				hs.Add("c")
+				want := []string{"a","b","c"}
+
+			got := slices.Collect(hs.ByOldest())
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf(
+					"History set mismatch (-want +got):\n%s",
+					diff)
+			}
+
 }
