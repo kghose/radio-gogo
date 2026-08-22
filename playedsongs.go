@@ -5,6 +5,7 @@
 package main
 
 import (
+	"bufio"
 	"log/slog"
 	"os"
 
@@ -12,15 +13,57 @@ import (
 )
 
 type PlayedSongs struct {
-	fp      *os.File
-	buf     radio.SongLog
+	hist    radio.HistorySet
 	filters *radio.StringFilters
+	path    string
+}
+
+func (ps *PlayedSongs) load() {
+	if ps.path == "" {
+		return
+	}
+
+	fp, err := os.Open(ps.path)
+	if err != nil {
+		slog.Info("Could not open played songs file", "path", ps.path)
+		return
+	}
+	defer fp.Close()
+
+	scanner := bufio.NewScanner(fp)
+	for scanner.Scan() {
+		ps.hist.Add(scanner.Text())
+	}
+	slog.Info("Loaded song title history", "N", ps.hist.Len())
+}
+
+func (ps *PlayedSongs) save() {
+	if ps.path == "" {
+		return
+	}
+
+	fp, err := os.Create(ps.path)
+	if err != nil {
+		slog.Error("Could not save layed songs file", "path", ps.path)
+		ps.path = "" // stop trying
+		return
+	}
+	defer fp.Close()
+
+	writer := bufio.NewWriter(fp)
+	for s := range ps.hist.ByOldest() {
+		writer.WriteString(s + "\n")
+	}
+	err = writer.Flush()
+	if err != nil {
+		slog.Error("Problem saving songs", "err", err)
+	}
 }
 
 func NewPlayedSongs(n int, filters *radio.StringFilters) PlayedSongs {
 
 	ps := PlayedSongs{}
-	ps.buf = radio.NewSongLog(n)
+	ps.hist = radio.NewHistorySet(n)
 	ps.filters = filters
 
 	var playedSongsPathConfig = ConfigPath{
@@ -31,23 +74,19 @@ func NewPlayedSongs(n int, filters *radio.StringFilters) PlayedSongs {
 
 	path, err := getPath(playedSongsPathConfig)
 	if err != nil {
-		slog.Error("Could not setup path for saving song files")
+		slog.Error("Could not setup path for saving played song titles")
 	} else {
-		fp, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			slog.Error("Could not open played songs file")
-		}
-		ps.fp = fp
+		ps.path = path
+		slog.Info("Saving played song titles", "path", ps.path)
 	}
+	ps.load()
 
 	return ps
 }
 
 func (ps *PlayedSongs) add(song string) bool {
-	if song != "" && ps.filters.IsSongTitle(song) && ps.buf.Add(song) {
-		if ps.fp != nil {
-			ps.fp.WriteString(song + "\n")
-		}
+	if song != "" && ps.filters.IsSongTitle(song) && ps.hist.Latest() != song {
+		ps.hist.Add(song)
 		return true
 	}
 	return false
