@@ -57,19 +57,19 @@ func TestAddToHistorySet(t *testing.T) {
 	}
 }
 
-
 func TestByOldest(t *testing.T) {
-			hs := NewHistorySet(3)
-				hs.Add("a")
-				hs.Add("b")
-				hs.Add("c")
-				want := []string{"a","b","c"}
+	hs := NewHistorySet(3)
+	hs.Add("a")
+	hs.Add("b")
+	hs.Add("c")
+	want := []string{"a", "b", "c"}
 
-			got := slices.Collect(hs.ByOldest())
-			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf(
-					"History set mismatch (-want +got):\n%s",
-					diff)
-			}
+	got := slices.Collect(hs.ByOldest())
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf(
+			"History set mismatch (-want +got):\n%s",
+			diff)
+	}
 
 }
+

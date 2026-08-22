@@ -16,34 +16,39 @@ type HistoryNode struct {
 type HistorySet struct {
 	head    *HistoryNode
 	tail    *HistoryNode
-	size    uint64
-	maxSize uint64
+	maxSize int
 	index   map[string]*HistoryNode
 }
 
-func NewHistorySet(maxSize uint64) HistorySet {
+func NewHistorySet(maxSize int) HistorySet {
 	return HistorySet{
 		maxSize: maxSize,
 		index:   map[string]*HistoryNode{}}
 }
 
 func (hs *HistorySet) removeTail() {
-	if hs.size == 0 {
+	if hs.tail == nil {
 		return
 	}
-	if hs.size > 1 {
-		hs.tail.prev.next = nil
-	} else {
+	if hs.tail.prev == nil {
 		hs.head = nil
+	} else {
+		hs.tail.prev.next = nil
 	}
 	delete(hs.index, hs.tail.val)
 	hs.tail = hs.tail.prev
 }
 
 func (hs *HistorySet) placeAtHead(node *HistoryNode) {
+	if hs.head == nil {
+		hs.head = node
+		hs.tail = node
+		return
+	}
+
+	node.prev = nil
 	node.next = hs.head
 	hs.head.prev = node
-	node.prev = nil
 	hs.head = node
 }
 
@@ -67,16 +72,9 @@ func (hs *HistorySet) addToHead(s string) {
 	node := &HistoryNode{
 		val: s,
 	}
+	hs.placeAtHead(node)
 	hs.index[s] = node
-	if hs.size == 0 {
-		hs.head = node
-		hs.tail = node
-	} else {
-		hs.placeAtHead(node)
-	}
-	if hs.size < hs.maxSize {
-		hs.size++
-	} else {
+	if len(hs.index) > hs.maxSize {
 		hs.removeTail()
 	}
 }
@@ -88,6 +86,18 @@ func (hs *HistorySet) Add(s string) {
 		hs.moveToHead(node)
 	} else {
 		hs.addToHead(s)
+	}
+}
+
+func (hs *HistorySet) Len() int {
+	return len(hs.index)
+}
+
+func (hs *HistorySet) Latest() string {
+	if hs.head != nil {
+		return hs.head.val
+	} else {
+		return ""
 	}
 }
 
