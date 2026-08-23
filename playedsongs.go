@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"log/slog"
 	"os"
+	"slices"
 
 	"github.com/kghose/radio-go-go/internal"
 )
@@ -90,4 +91,8 @@ func (ps *PlayedSongs) add(song string) bool {
 		return true
 	}
 	return false
+}
+
+func (ps *PlayedSongs) latestPlayed() []string {
+	return slices.Collect(ps.hist.ByLatest())
 }

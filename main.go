@@ -2,7 +2,6 @@ package main
 
 import (
 	"log/slog"
-	"slices"
 	"time"
 
 	"github.com/kghose/radio-go-go/internal"
@@ -116,14 +115,13 @@ func main() {
 		defer ticker.Stop()
 
 		ps := NewPlayedSongs(10000, &stringfilters)
-		ui.RefreshPlayedsongs(slices.Collect(ps.hist.ByLatest()))
+		ui.RefreshPlayedsongs(ps.latestPlayed())
 
 		for ; ; <-ticker.C {
 			meta := mpvPlayer.Meta()
 			ui.SetNowPlaying(meta)
 			if ps.add(meta.Title) {
-				ui.RefreshPlayedsongs(slices.Collect(ps.hist.ByLatest()))
-				slog.Info("Added", "song", meta.Title)
+				ui.RefreshPlayedsongs(ps.latestPlayed())
 				ps.save()
 			}
 		}
