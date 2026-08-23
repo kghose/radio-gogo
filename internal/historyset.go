@@ -30,12 +30,12 @@ func (hs *HistorySet) removeTail() {
 	if hs.tail == nil {
 		return
 	}
+	delete(hs.index, hs.tail.val)
 	if hs.tail.prev == nil {
 		hs.head = nil
 	} else {
 		hs.tail.prev.next = nil
 	}
-	delete(hs.index, hs.tail.val)
 	hs.tail = hs.tail.prev
 }
 
@@ -43,6 +43,9 @@ func (hs *HistorySet) placeAtHead(node *HistoryNode) {
 	if hs.head == nil {
 		hs.head = node
 		hs.tail = node
+		return
+	}
+	if hs.head == node {
 		return
 	}
 

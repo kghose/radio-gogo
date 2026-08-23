@@ -14,6 +14,16 @@ func TestAddToHistorySet(t *testing.T) {
 		want   []string
 	}{
 		{
+			"Successive repeat",
+			[]string{"b", "b"},
+			[]string{"b"},
+		},
+		{
+			"Successive repeat 2",
+			[]string{"a", "b", "b"},
+			[]string{"b", "a"},
+		},
+		{
 			"Unique<max",
 			[]string{"a", "b", "c"},
 			[]string{"c", "b", "a"},
