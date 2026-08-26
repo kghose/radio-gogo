@@ -24,20 +24,13 @@ inspired by [Tera][tera] and I use this project as an excuse to learn
 1. Type "?" for key map and search syntax
 
 
-## Errors
-1. Radio Go Go will keep searching for Radio Browser servers until it gets a 
-   list of them. Without at least one server station search is disabled.
-1. Sometimes a Radio Browser server is flaky and will return corrupt results.  
-   Just hit ENTER again to search
-
 ## User data
-Played and favorite stations are stored as `stations.json` under
-`$XDG_DATA_HOME` if it is set or `.local/share/radio-gogo/`
 
-Played songs (metadata as reported by the station stream) are saved in
-`songs.txt` in the same directory.
-
-The log is saved in log.txt (but may be moved to `$` in a future version)
+- `$XDG_DATA_HOME (.local/share/radio-gogo/)/stations.json`: Played and/or faved
+  stations
+- `$XDG_DATA_HOME (.local/share/radio-gogo/)/songs.txt`: Played songs titles
+  (metadata as reported by the station stream)
+- `$XDG_STATE_HOME (.local/state/radio-gogo/)/radio-gogo.log`: log
 
 # Code
 
@@ -49,14 +42,11 @@ go test -v ./...
 
 ## Data structures and algorithms
 
-Internally we keep two lists of stations.
+Played and faved stations are stored in a [flat list of
+structs](internal/station.go) that is sorted and filtered in different ways.
 
-1. History
-1. Search result
-
-Stations are added to the history when they are played or added to favorites
-without playing. 
-
+Played songs are managed by [a linked list with a map indexing into
+it](internal/historyset.go) that implements a recency ordered set of song names.
 
 # Learning goals
 
@@ -66,6 +56,10 @@ without playing.
 1. TUIs
 
 # Learning notes
+
+## Sockets
+
+`internal/mpv/mpv.go`: `net.Dial`, `conn.Write`
 
 ## The magic of json Decode
 `json` decoding is uncharacteristically marvelous in `golang`. Saving and 
@@ -112,6 +106,10 @@ type MpvRequest struct {
 	Request_id int      `json:"request_id"`
 }
 ```
+
+A very useful tag is `json:"-"` (Used in the [`Station`](internal/station.go)
+struct). This skips the field during serialization.
+
 ## `json.RawMessage` type
 The response from mpv contains a nested structure. There are two fixed fields 
 and one field whose structured contents vary based on the command. Do I have to 
@@ -132,8 +130,25 @@ until later.
 
 ## `defer`
 
+Execute this function when the surrounding function returns. Has somewhat
+similar uses as a C++ destructor or cleanup code in Python context.
+
+
 
 ## Composition (struct embedding)
+
+[internal/station.go](internal/station.go)
+
+```
+type Station struct {
+	radiobrowser.Station
+	LastPlayed   time.Time // The last time we played this
+	Favorite     bool      // In our favorites list?
+	SearchResult bool      `json:"-"` // Current search result? (No need to save in station history)
+}
+```
+A bit like inheritance ...
+
 
 ## Custom sorting
 
@@ -141,7 +156,18 @@ until later.
 
 [file](internal/songlog.go)
 
+## Data embeds
 
+
+
+## Debugging with Delve
+
+`dlv test`
+
+`dlv debug main.go` - needs the binary compiled without optimization and with
+symbols.
+
+`dlv attach <PID>` 
 
 
 # Design decisions: Focus on simplicity
